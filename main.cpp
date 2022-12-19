@@ -6,5 +6,10 @@
 
 int main(){
     std::cout << "Hello world" << std::endl;
+    printf("2121");
+//    for(auto &:){
+//        
+//        fe
+//    }
     return 0;
 }

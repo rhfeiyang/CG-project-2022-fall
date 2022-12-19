@@ -1,10 +1,16 @@
 cmake_minimum_required(VERSION 3.22)
 project(CG_project_2022_fall)
 find_package(OpenVDB CONFIG REQUIRED)
-
+find_package(glfw3 CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
+find_package(glad CONFIG REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
-
+include_directories(include)
+include_directories(src)
 add_executable(${PROJECT_NAME}
-        main.cpp)
+        src/main.cpp)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenVDB::openvdb)
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
+target_link_libraries(${PROJECT_NAME} PRIVATE glad::glad)

@@ -11,14 +11,16 @@
 
 class VDBLoader {
 public:
-  explicit VDBLoader(const char* filename_);
+  explicit VDBLoader(std::string filename);
     ~VDBLoader();
-
+    std::vector<std::string> &getGridNames();
 private:
-    openvdb::GridPtrVecPtr grids;
+    std::vector<openvdb::GridBase::Ptr> grids;
+    openvdb::io::File *file;
+    std::vector<std::string> gridNames;
+    std::string  filename;
 
-std::string  filename;
-
+    std::string getGridType(openvdb::GridBase::Ptr grid);
 };
 
 #endif /* __VDB_VOLUME_LOADER_HPP__ */

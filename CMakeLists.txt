@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(include)
 include_directories(src)
 add_executable(${PROJECT_NAME}
-        src/main.cpp)
+        src/main.cpp src/VDBLoader.cpp)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenVDB::openvdb)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)

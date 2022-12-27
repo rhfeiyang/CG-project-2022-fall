@@ -1,11 +1,13 @@
-// Final project of CG in ShanghaiTech
-// Multi-Resolution Iso-surface Rendering
-// By Renhui Liyian Songhaiyu
-
+#include <openvdb/openvdb.h>
+#include <openvdb/tree/NodeManager.h>
+#include <openvdb/version.h>
+#include <openvdb/tools/SignedFloodFill.h>
+#include "VDBLoader.hpp"
 #include "common.h"
 
-int main(){
-    Vec3f  v={1,2,3};
-    std::cout << v[0]<<v[1]<<v[2] << std::endl;
+int main()
+{
+    VDBLoader loader("../bunny.vdb");
+
     return 0;
 }

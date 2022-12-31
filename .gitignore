@@ -109,3 +109,8 @@ build
 cmake-build-release/
 cmake-build-debug/
 .idea/
+resource/single-res small.vdb
+resource/single-res big.vdb
+resource/README.md
+resource/multi-res small.vdb
+resource/multi-es big.vdb

@@ -20,6 +20,7 @@ set(HEADS
         include/ABR.h
         include/Transfer_func.h
         include/Render.h
+        include/VDBLoader.hpp
         )
 set(SRC
         src/main.cpp
@@ -34,7 +35,7 @@ set(SRC
         src/Space_skipping.cpp
         src/ABR.cpp
         include/Transfer_func.cpp
-        include/Render.cpp )
+        include/Render.cpp)
 
 add_executable(${PROJECT_NAME} ${HEADS} ${SRC})
 

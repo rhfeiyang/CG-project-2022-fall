@@ -1,7 +1,7 @@
 #include "VDBLoader.hpp"
 
-std::string VDBLoader::getGridType(openvdb::GridBase::Ptr grid)
-{
+template<typename GridType>
+std::string VDBLoader<GridType>::getGridType(openvdb::GridBase::Ptr grid) {
     if (grid->isType<openvdb::BoolGrid>())
         return "BoolGrid";
     else if (grid->isType<openvdb::FloatGrid>())
@@ -21,28 +21,42 @@ std::string VDBLoader::getGridType(openvdb::GridBase::Ptr grid)
 
     return "Type not found";
 }
-
-std::vector<std::string> &VDBLoader::getGridNames()
-{
+template<typename GridType>
+std::vector<std::string> &VDBLoader<GridType>::getGridNames() {
     return gridNames;
 }
-VDBLoader::VDBLoader(std::string filename):filename(filename) {
+
+template<typename GridType>
+VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename){
     openvdb::initialize();
-    file=new openvdb::io::File(filename);
+    file = new openvdb::io::File(filename);
     file->getSize();
     file->open();
-    cout<<filename<<endl;
+    cout << filename << endl;
     for (openvdb::io::File::NameIterator nameIter = file->beginName();
          nameIter != file->endName(); ++nameIter) {
         std::string gridName = nameIter.gridName();
         openvdb::GridBase::Ptr baseGrid = file->readGrid(gridName);
         gridNames.push_back(gridName + " (" + getGridType(baseGrid) + ")");
-        grids.push_back(baseGrid);
+        grids_base.push_back(baseGrid);
+        auto type=baseGrid->type();
+        cout<<type<<endl;
+        assert(type==GridType::gridType());
+        //convert base to grid type
+        auto grid=openvdb::gridPtrCast<GridType>(baseGrid);
+        grids.push_back(grid);
+
     }
 
 }
 
 
-VDBLoader::~VDBLoader(){
-    file->close();
+
+template<typename GridType>
+VDBLoader<GridType>::~VDBLoader() {
+    if(file){
+        file->close();
+        delete[] file;
+    }
+
 }

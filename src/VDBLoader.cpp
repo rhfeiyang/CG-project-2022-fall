@@ -29,6 +29,7 @@ std::vector<std::string> &VDBLoader::getGridNames()
 VDBLoader::VDBLoader(std::string filename):filename(filename) {
     openvdb::initialize();
     file=new openvdb::io::File(filename);
+    file->getSize();
     file->open();
     cout<<filename<<endl;
     for (openvdb::io::File::NameIterator nameIter = file->beginName();

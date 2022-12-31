@@ -4,7 +4,7 @@
 
 int main()
 {
-    VDBLoader loader("../bunny.vdb");
+    VDBLoader loader("../resource/multi-res small.vdb");
 //Construct ABR
 
 //Draw

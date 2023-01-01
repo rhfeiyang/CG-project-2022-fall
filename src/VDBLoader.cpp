@@ -47,7 +47,10 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename){
         grids.push_back(grid);
 
     }
-
+//    auto grid=openvdb::gridPtrCast<openvdb::Vec3fGrid>(grids[0]);
+//    for(auto ite=grid->beginValueOn();ite;++ite){
+//        cout<<ite.getValue()<<endl;
+//    }
 }
 
 
@@ -58,5 +61,11 @@ VDBLoader<GridType>::~VDBLoader() {
         file->close();
         delete[] file;
     }
+}
 
+template<typename GridType>
+void VDBLoader<GridType>::SortBydx() {
+    std::sort(grids.begin(),grids.end(),[](auto &agrid,auto &bgrid){
+        return agrid->metaValue<double>("dx")< bgrid->metaValue<double>("dx");
+    });
 }

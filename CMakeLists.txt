@@ -25,7 +25,6 @@ set(HEADS
 set(SRC
         src/main.cpp
         src/VDBLoader.cpp
-        src/Cell.cpp
         src/Brick.cpp
         src/Support.cpp
         src/Construct.cpp

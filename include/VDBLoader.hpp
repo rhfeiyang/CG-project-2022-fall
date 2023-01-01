@@ -8,6 +8,7 @@
 #include "openvdb/openvdb.h"
 #include <openvdb/io/Stream.h>
 #include "common.h"
+#include <algorithm>
 
 template<typename GridType>
 class VDBLoader {
@@ -27,6 +28,7 @@ public:
     std::string filename;
 
     std::string getGridType(openvdb::GridBase::Ptr grid);
+    void SortBydx();
 
 private:
 

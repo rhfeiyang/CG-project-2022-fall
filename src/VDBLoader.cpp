@@ -1,4 +1,5 @@
-#include "VDBLoader.hpp"
+#include "VDBLoader.h"
+
 
 template<typename GridType>
 std::string VDBLoader<GridType>::getGridType(openvdb::GridBase::Ptr grid) {
@@ -38,14 +39,27 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename){
         std::string gridName = nameIter.gridName();
         openvdb::GridBase::Ptr baseGrid = file->readGrid(gridName);
         gridNames.push_back(gridName + " (" + getGridType(baseGrid) + ")");
-        grids_base.push_back(baseGrid);
+//        grids_base.push_back(baseGrid);
         auto type=baseGrid->type();
         cout<<type<<endl;
         assert(type==GridType::gridType());
         //convert base to grid type
-        auto grid=openvdb::gridPtrCast<GridType>(baseGrid);
-        grids.push_back(grid);
+        auto grid=openvdb::gridPtrCast<Vec3sGrid>(baseGrid);
 
+        FloatGrid::Ptr floatgrid=FloatGrid::create();
+        auto accessor=floatgrid->getAccessor();
+        for(auto ite=grid->beginValueOn();ite;++ite){
+            auto coord=ite.getCoord();
+            auto vec=ite.getValue();
+            auto vec_norm=vec.length();
+            accessor.setValue(coord,vec_norm);
+        }
+        for (auto ite=grid->beginMeta();ite!=grid->endMeta();++ite) {
+            auto name=ite->first;
+            auto value=(ite->second)->copy();
+            floatgrid->insertMeta(name,*value);
+        }
+        grids.push_back(floatgrid);
     }
 //    auto grid=openvdb::gridPtrCast<openvdb::Vec3fGrid>(grids[0]);
 //    for(auto ite=grid->beginValueOn();ite;++ite){

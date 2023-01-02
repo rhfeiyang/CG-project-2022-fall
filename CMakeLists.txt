@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.22)
 project(CG_project_2022_fall)
 find_package(OpenVDB CONFIG REQUIRED)
+find_package(GLUT REQUIRED)
+Find_package(OpenGL)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 include_directories(include)
 include_directories(src)
 
@@ -20,11 +22,14 @@ set(HEADS
         include/ABR.h
         include/Transfer_func.h
         include/Render.h
-        include/VDBLoader.hpp
+        include/VDBLoader.h
+        include/camera.h
+        include/input.h
+        include/shader.h
+        include/scene.h
         )
 set(SRC
         src/main.cpp
-        src/VDBLoader.cpp
         src/Brick.cpp
         src/Support.cpp
         src/Construct.cpp
@@ -33,12 +38,20 @@ set(SRC
         src/Opacity_corr.cpp
         src/Space_skipping.cpp
         src/ABR.cpp
-        include/Transfer_func.cpp
-        include/Render.cpp)
+        src/Transfer_func.cpp
+        src/Render.cpp
+        src/VDBLoader.cpp
+        src/common.cpp
+        src/camera.cpp
+        src/input.cpp
+        src/shader.cpp
+        src/scene.cpp
+        )
 
 add_executable(${PROJECT_NAME} ${HEADS} ${SRC})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenVDB::openvdb)
+target_link_libraries(${PROJECT_NAME} PRIVATE GLUT::GLUT)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 target_link_libraries(${PROJECT_NAME} PRIVATE glad::glad)

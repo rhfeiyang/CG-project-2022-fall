@@ -1,13 +1,11 @@
-#ifndef __VDB_VOLUME_LOADER_HPP__
-#define __VDB_VOLUME_LOADER_HPP__
+#ifndef __VDB_VOLUME_LOADER_H__
+#define __VDB_VOLUME_LOADER_H__
 
-#pragma  once
+
 
 #include <memory>
-
-#include "openvdb/openvdb.h"
-#include <openvdb/io/Stream.h>
 #include "common.h"
+//#include <openvdb/io/Stream.h>
 #include <algorithm>
 
 template<typename GridType>
@@ -21,8 +19,9 @@ public:
 
     std::vector<std::string> &getGridNames();
 
-    std::vector<openvdb::GridBase::Ptr> grids_base;
-    std::vector<typename GridType::Ptr> grids;
+//    std::vector<openvdb::GridBase::Ptr> grids_base;
+//    std::vector<typename GridType::Ptr> grids;
+    std::vector<FloatGrid::Ptr> grids;
     openvdb::io::File *file;
     std::vector<std::string> gridNames;
     std::string filename;
@@ -31,8 +30,6 @@ public:
     void SortBydx();
 
 private:
-
-
 };
 
-#endif /* __VDB_VOLUME_LOADER_HPP__ */
+#endif /* __VDB_VOLUME_LOADER_H__ */

@@ -14,6 +14,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <openvdb/tools/Interpolation.h>
 
 #include <iostream>
 #include <fstream>
@@ -24,7 +25,9 @@
 using Vec4f=openvdb::Vec4f;
 using Vec3f=openvdb::Vec3f;
 using Vec3i=openvdb::Vec3i;
+using Vec3d=openvdb::Vec3d;
 using Vec2f=openvdb::Vec2f;
+using Vec2i=openvdb::Vec2i;
 using Mat4f=openvdb::Mat4s;
 using Mat3f=openvdb::Mat3s;
 using Coord=openvdb::Coord;
@@ -39,6 +42,11 @@ using std::endl;
 using Float = GLfloat; // GLfloat usually equals to float32
 constexpr Float zero = Float(0);
 constexpr Float one = Float(1);
+constexpr float RAY_DEFAULT_MIN = 1e-5;
+constexpr float RAY_DEFAULT_MAX = 1e7;
+constexpr float PI = 3.141592653579f;
+constexpr float INV_PI = 0.31830988618379067154;
+constexpr float EPS = 1e-5;
 using Quat = glm::qua<Float, glm::defaultp>;
 //using Quat = openvdb::v10_0::math::Quats;
 

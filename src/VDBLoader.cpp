@@ -59,7 +59,9 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename){
             auto value=(ite->second)->copy();
             floatgrid->insertMeta(name,*value);
         }
+        floatgrid->setTransform(grid->transformPtr());
         grids.push_back(floatgrid);
+        dx.push_back(grid->metaValue<double>("dx"));
     }
 //    auto grid=openvdb::gridPtrCast<openvdb::Vec3fGrid>(grids[0]);
 //    for(auto ite=grid->beginValueOn();ite;++ite){

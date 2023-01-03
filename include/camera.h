@@ -1,54 +1,35 @@
-#pragma once
+#ifndef CAMERA_H_
+#define CAMERA_H_
 
-#include "input.h"
-#include "time_system.h"
-#include "transform.h"
-
-//#define FIRST_PERSON_CAMERA
+//#include "core.h"
+#include "common.h"
+#include "ray.h"
+#include "image.h"
+#include "config.h"
 
 class Camera {
  public:
-  // transform
-  Transform transform = Transform();
+  Camera();
+  explicit Camera(const Config::CamConfig &config, std::shared_ptr<ImageRGB>& img);
 
-  // perspective
-  Float fov_y;
-  Float aspect = 1;
-  Float near = Float(0.1);
-  Float far = Float(100.0);
+  Ray generateRay(float x, float y);
+  void lookAt(const Vec3f &look_at, const Vec3f &ref_up = {0, 1, 0});
 
-  // move
-  Float mouse_sensitivity = Float(0.085);
-
-#ifdef FIRST_PERSON_CAMERA
-  // first person camera
-//  Float pitch_max = Float(75.0);
-  bool first_person=true;
-#else
-    bool first_person=false;
-#endif
-
-  Camera(Float fov_y);
-
-  Camera(const Camera&) = default;
-  Camera(Camera&&) = default;
-  Camera& operator=(const Camera&) = default;
-  Camera& operator=(Camera&&) = default;
-  ~Camera() = default;
-
-  [[nodiscard]] gMat4 LookAtMat() const;
-  [[nodiscard]] gMat4 PerspectiveMat() const;
-
-  void Update();
-
+  void setPosition(const Vec3f &pos);
+  [[nodiscard]] Vec3f getPosition() const;
+  void setFov(float new_fov);
+  [[nodiscard]] float getFov() const;
+  void setImage(std::shared_ptr<ImageRGB> &img);
+  [[nodiscard]] std::shared_ptr<ImageRGB> &getImage();
  private:
-  Float speeding_rate = zero;
-  bool is_speeding = false;
+  Vec3f position;
+  Vec3f forward;
+  Vec3f up;
+  Vec3f right;
+  float focal_len;
+  float fov;
 
-  static constexpr Float MOVE_SPEED_SLOW = Float(3.0);
-  static constexpr Float MOVE_SPEED_FAST = Float(6.0);
-  static constexpr Float ACCELERATION = Float(2.5);
-  static constexpr Float DECELERATION = Float(8.0);
-
-
+  std::shared_ptr<ImageRGB> image;
 };
+
+#endif // CAMERA_H_

@@ -22,6 +22,7 @@ public:
 //    std::vector<openvdb::GridBase::Ptr> grids_base;
 //    std::vector<typename GridType::Ptr> grids;
     std::vector<FloatGrid::Ptr> grids;
+    std::vector<double> dx;
     openvdb::io::File *file;
     std::vector<std::string> gridNames;
     std::string filename;

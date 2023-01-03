@@ -1,15 +1,17 @@
 cmake_minimum_required(VERSION 3.22)
 project(CG_project_2022_fall)
 find_package(OpenVDB CONFIG REQUIRED)
-find_package(GLUT REQUIRED)
+#find_package(GLUT REQUIRED)
 Find_package(OpenGL)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 set(CMAKE_CXX_STANDARD 20)
+
 include_directories(include)
 include_directories(src)
-
+#include_directories(libs)
+add_subdirectory(libs)
 set(HEADS
         include/Cell.h
         include/Brick.h
@@ -24,10 +26,11 @@ set(HEADS
         include/Render.h
         include/VDBLoader.h
         include/camera.h
-        include/input.h
-        include/shader.h
+        include/integrator.h
+        include/ray.h
         include/scene.h
-        )
+        include/image.h
+        include/utils.h include/config.h include/config_io.h)
 set(SRC
         src/main.cpp
         src/Brick.cpp
@@ -42,16 +45,22 @@ set(SRC
         src/Render.cpp
         src/VDBLoader.cpp
         src/common.cpp
+        src/common.cpp
         src/camera.cpp
-        src/input.cpp
-        src/shader.cpp
+        src/integrator.cpp
         src/scene.cpp
+        src/image.cpp
+#        trash/camera.cpp
+#        trash/input.cpp
+#        trash/shader.cpp
+#        trash/scene.cpp
         )
 
 add_executable(${PROJECT_NAME} ${HEADS} ${SRC})
 
+target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json stb)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenVDB::openvdb)
-target_link_libraries(${PROJECT_NAME} PRIVATE GLUT::GLUT)
+#target_link_libraries(${PROJECT_NAME} PRIVATE GLUT::GLUT)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 target_link_libraries(${PROJECT_NAME} PRIVATE glad::glad)

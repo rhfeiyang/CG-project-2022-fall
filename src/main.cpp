@@ -3,8 +3,10 @@
 #include "VDBLoader.cpp"
 #include "Cell.h"
 #include "Brick.h"
-#include "scene.h"
+#include "config_io.h"
+#include "integrator.h"
 
+//#define TEST
 struct Local {
     static inline void diff(const Vec3f& a, const Vec3f& b, Vec3f& result) {
         result = a - b;
@@ -12,9 +14,69 @@ struct Local {
 };
 
 
-int main() {
-    VDBLoader<Vec3sGrid> loader("../resource/single-res small.vdb");
+int main(int argc, char *argv[]) {
+#ifndef TEST
+    /// load config from json file
+    Config config;
+    std::ifstream fin;
+    std::string file_path;
+    if (argc == 1) {
+        std::cout << "No json specified, use default path." << std::endl;
+        file_path=GetFilePath("configs/config.json");
+        fin.open(file_path);
+    } else {
+        file_path=argv[1];
+        fin.open(file_path);
+    }
+    if (!fin.is_open()) {
+        std::cerr << "Can not open json file. Exit." << std::endl;
+        exit(0);
+    } else {
+        std::cout << "Json file loaded from " << file_path << std::endl;
+    }
+    // parse json object to Config
+    try {
+        nlohmann::json j;
+        fin >> j;
+        nlohmann::from_json(j, config);
+        fin.close();
+    } catch (nlohmann::json::exception &ex) {
+        fin.close();
+        std::cerr << "Error:" << ex.what() << std::endl;
+        exit(-1);
+    }
+    std::cout << "Parsed json to config. Start building scene..." << std::endl;
+    // initialize all settings from config
+    // set image resolution.
+    std::shared_ptr<ImageRGB> rendered_img
+            = std::make_shared<ImageRGB>(config.image_resolution[0], config.image_resolution[1]);
+    std::cout << "Image resolution: "
+              << config.image_resolution[0] << " x " << config.image_resolution[1] << std::endl;
+    // set camera
+    std::shared_ptr<Camera> camera = std::make_shared<Camera>(config.cam_config, rendered_img);
+    // construct scene.
+    auto scene = std::make_shared<Scene>();
+//    initSceneFromConfig(config, scene);
+//load vdb
+    VDBLoader<Vec3sGrid> loader(GetFilePath(config.file_path));
+    // init integrator
+    auto single_grid=loader.grids[0];
+    auto dim=single_grid->evalActiveVoxelBoundingBox().dim();
+    std::unique_ptr<Integrator> integrator
+            = std::make_unique<Integrator>(camera, scene, config.spp, single_grid,dim[dim.maxIndex()]*loader.dx[0]);
+    std::cout << "Start Rendering..." << std::endl;
+    auto start = std::chrono::steady_clock::now();
+    // render scene
+    integrator->render();
+    auto end = std::chrono::steady_clock::now();
+    auto time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
+    std::cout << "\nRender Finished in " << time << "s." << std::endl;
+    rendered_img->writeImgToFile("../result.png");
+    std::cout << "Image saved to disk." << std::endl;
 
+
+
+#else
 //    loader.SortBydx();
 //Construct ABR
 //    std::vector<Cell> cells;
@@ -48,102 +110,6 @@ int main() {
         }
         grid_idx++;
     }
-    /// settings
-
-    // window
-    constexpr int window_width = 1920;
-    constexpr int window_height = 1080;
-
-
-    /// setup window
-    GLFWwindow* window;
-    {
-        if (!glfwInit()) // initialize glfw library
-            return -1;
-
-        // setting glfw window hints and global configurations
-        {
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // use core mode
-            // glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE); // use debug context
-
-        }
-
-        // create a windowed mode window and its OpenGL context
-        window = glfwCreateWindow(window_width, window_height, "CS171 HW5: Cloth Simulation", NULL, NULL);
-        if (!window) {
-            glfwTerminate();
-            return -1;
-        }
-
-        // make the window's context current
-        glfwMakeContextCurrent(window);
-
-        // load Opengl
-        if (!gladLoadGL()) {
-            glfwTerminate();
-            return -1;
-        }
-
-        // setup call back functions
-        glfwSetFramebufferSizeCallback(window, Input::CallBackResizeFlareBuffer);
-    }
-
-    /// main Loop
-    {
-        // shader
-        Shader::Initialize();
-
-        // scene
-        Scene scene(45);
-        scene.camera.transform.position = { 0, -1.5, -6 };
-        scene.camera.transform.rotation = { 0, 0, 1, 0 };
-        scene.light_position = { 0, 3, -10 };
-        scene.light_color = gVec3(1, 1, 1) * Float(1.125);
-
-
-        // loop until the user closes the window
-        Input::Start(window);
-//    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glEnable(GL_DEPTH_TEST);
-        while (!glfwWindowShouldClose(window)) {
-            Input::Update();
-            Time::Update();
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            /// terminate
-            if (Input::GetKey(KeyCode::Escape))
-                glfwSetWindowShouldClose(window, true);
-
-            /// fixed update
-            for (unsigned i = 0; i < Time::fixed_update_times_this_frame; ++i) {
-                if(Input::GetKey(KeyCode::Space)) { //! only when space is pressed
-                    scene.FixedUpdate();
-                }
-            }
-
-            /// update
-            {
-                scene.Update();
-//        printf("Pos = (%f, %f, %f)\n", scene.camera.transform.position.x, scene.camera.transform.position.y, scene.camera.transform.position.z);
-//        printf("Rot = (%f, %f, %f, %f)\n", scene.camera.transform.rotation.w, scene.camera.transform.rotation.x, scene.camera.transform.rotation.y, scene.camera.transform.rotation.z);
-//        printf("\n");
-            }
-
-            /// render
-            {
-                scene.RenderUpdate();
-            }
-
-            // swap front and back buffers
-            glfwSwapBuffers(window);
-
-            // poll for and process events
-            glfwPollEvents();
-        }
-    }
-
-    glfwTerminate();
+#endif
     return 0;
 }

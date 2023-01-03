@@ -1,52 +1,78 @@
 #include "scene.h"
-
-Scene::Scene(Float camera_fov_y) :
-  camera(camera_fov_y),
-  light_position(0, 0, 0),
-  light_color(0, 0, 0) {
-}
-
-//std::shared_ptr<Object> Scene::AddObject(const std::shared_ptr<Mesh>& mesh,
-//                                         const std::shared_ptr<Shader>& shader) {
-//  objects.emplace_back(
-//    std::make_shared<Object>(mesh, shader));
-//  mesh->SetObject(objects.back());
-//  return objects.back();
+//#include "load_obj.h"
+//
+//#include <utility>
+//#include <iostream>
+//
+//void Scene::addObject(std::shared_ptr<TriangleMesh> &mesh) {
+//  objects.push_back(mesh);
 //}
 //
-//std::shared_ptr<Object> Scene::AddObject(const std::shared_ptr<Mesh>& mesh,
-//                                         const std::shared_ptr<Shader>& shader,
-//                                         const Transform& transform) {
+//void Scene::setLight(const std::shared_ptr<Light> &new_light) {
+//  light = new_light;
+//}
+//bool Scene::isShadowed(Ray &shadow_ray) {
+//  Interaction in;
 //
-//  objects.emplace_back(
-//    std::make_shared<Object>(mesh, shader, transform));
-//  mesh->SetObject(objects.back());
-//  return objects.back();
+//  return intersect(shadow_ray, in) && in.type == Interaction::Type::GEOMETRY;
 //}
 //
-//void Scene::Update() {
-//  camera.Update();
-//}
-//
-//void Scene::FixedUpdate() {
-//  for (auto& object : objects)
-//    object->FixedUpdate();
-//}
-//
-//void Scene::RenderUpdate() {
-//  for (const auto& object : objects) {
-//    if (object->mesh && object->shader && object->transform) {
-//      object->shader->Set("model", object->transform->ModelMat());
-//      object->shader->Set("view", camera.LookAtMat());
-//      object->shader->Set("projection", camera.PerspectiveMat());
-//      object->shader->Set("object_color", object->color);
-//      object->shader->Set("light_position", light_position);
-//      object->shader->Set("light_color", light_color);
-//      object->shader->Set("camera_position", camera.transform.position);
-//      object->shader->Set("is_bidirectional", object->mesh->IsBidirectional());
-//      object->shader->Use();
-//      object->mesh->DrawTriangles();
+//bool Scene::intersect(Ray &ray, Interaction &interaction) {
+//  light->intersect(ray, interaction);
+//  for (const auto& obj: objects) {
+//    Interaction cur_it;
+//    if (obj->intersect(ray, cur_it) && (cur_it.dist < interaction.dist)) {
+//      interaction = cur_it;
 //    }
 //  }
+//  return interaction.type != Interaction::Type::NONE;
 //}
-
+//
+//const std::shared_ptr<Light> &Scene::getLight() const {
+//  return light;
+//}
+//
+//void initSceneFromConfig(const Config &config, std::shared_ptr<Scene> &scene) {
+//  // add square light to scene.
+//  std::shared_ptr<Light> light = std::make_shared<SquareAreaLight>(Vec3f(config.light_config.position),
+//                                                                   Vec3f(config.light_config.radiance),
+//                                                                   Vec2f(config.light_config.size));
+//  scene->setLight(light);
+//  // init all materials.
+//  std::map<std::string, std::shared_ptr<BSDF>> mat_list;
+//  for (const auto &mat: config.materials) {
+//    std::shared_ptr<BSDF> p_mat;
+//    switch (mat.type) {
+//      case MaterialType::DIFFUSE: {
+//        p_mat = std::make_shared<IdealDiffusion>(Vec3f(mat.color));
+//        mat_list[mat.name] = p_mat;
+//        break;
+//      }
+//    case MaterialType::SPECULAR: {
+//        p_mat = std::make_shared<IdealSpecular>(Vec3f(mat.color));
+//        mat_list[mat.name] = p_mat;
+//        break;
+//    }
+//    case MaterialType::Transmission: {
+//        p_mat = std::make_shared<Translucent>(Vec3f(mat.color));
+//        mat_list[mat.name] = p_mat;
+//        break;
+//    }
+//      default: {
+//        std::cerr << "unsupported material type!" << std::endl;
+//        exit(-1);
+//      }
+//    }
+//  }
+//  // add mesh objects to scene. Translation and scaling are directly applied to vertex coordinates.
+//  // then set corresponding material by name.
+//  std::cout << "loading obj files..." << std::endl;
+//  for (auto &object: config.objects) {
+//    auto mesh_obj = makeMeshObject(object.obj_file_path, Vec3f(object.translate), object.scale);
+//    mesh_obj->setMaterial(mat_list[object.material_name]);
+//    if (object.has_bvh) {
+//      mesh_obj->buildBVH();
+//    }
+//    scene->addObject(mesh_obj);
+//  }
+//}

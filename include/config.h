@@ -18,6 +18,8 @@ struct Config {
   int image_resolution[2];
   CamConfig cam_config;
   std::string file_path;
+  float iso_value;
+  float var;
 };
 
 #endif // CONFIG_H

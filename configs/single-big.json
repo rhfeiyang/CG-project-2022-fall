@@ -1,0 +1,14 @@
+{
+  "spp": 5,
+  "image_resolution" : [700, 500],
+  "cam_config" : {
+    "position" : [7,-2,3],
+    "look_at": [7,2,3],
+    "ref_up" : [0,0,1],
+    "vertical_fov": 90,
+    "focal_length" : 1
+  },
+  "file_path": "../resource/single-res big.vdb",
+  "iso_value": 0.064,
+  "var": 0.0001
+}

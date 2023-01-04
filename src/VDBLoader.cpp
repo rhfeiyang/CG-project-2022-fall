@@ -63,6 +63,9 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename){
         grids.push_back(floatgrid);
         dx.push_back(grid->metaValue<double>("dx"));
     }
+//    openvdb::io::File floatfile("../test.vdb");
+//    floatfile.write(grids);
+//    floatfile.close();
 //    auto grid=openvdb::gridPtrCast<openvdb::Vec3fGrid>(grids[0]);
 //    for(auto ite=grid->beginValueOn();ite;++ite){
 //        cout<<ite.getValue()<<endl;

@@ -3,6 +3,7 @@ project(CG_project_2022_fall)
 find_package(OpenVDB CONFIG REQUIRED)
 #find_package(GLUT REQUIRED)
 Find_package(OpenGL)
+find_package(OpenMP REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
@@ -58,7 +59,7 @@ set(SRC
 
 add_executable(${PROJECT_NAME} ${HEADS} ${SRC})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json stb)
+target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json stb OpenMP::OpenMP_CXX)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenVDB::openvdb)
 #target_link_libraries(${PROJECT_NAME} PRIVATE GLUT::GLUT)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)

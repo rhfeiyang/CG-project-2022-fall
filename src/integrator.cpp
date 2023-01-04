@@ -9,9 +9,10 @@
 //                       std::shared_ptr<Scene> scene, int spp, int max_depth)
 //    : camera(std::move(cam)), scene(std::move(scene)), spp(spp), max_depth(max_depth) {
 //}
+#define OMP
 Integrator::Integrator(std::shared_ptr<Camera> cam,
-                       std::shared_ptr<Scene> scene, int spp, FloatGrid::Ptr &grid, float dist_limit, float var)
-        : camera(std::move(cam)), scene(std::move(scene)), spp(spp), grid(grid), dist_limit(dist_limit),variance(var) {
+                       std::shared_ptr<Scene> scene, int spp, FloatGrid::Ptr &grid, float dist_limit, float iso_value, float var)
+        : camera(std::move(cam)), scene(std::move(scene)), spp(spp), grid(grid), dist_limit(dist_limit), variance(var), iso_value(iso_value) {
 }
 
 void Integrator::render() const {
@@ -23,9 +24,13 @@ void Integrator::render() const {
     for(int i=1;i<=spp;i++){
         real_sample_points.emplace_back(sampler.get2D());
     }
+#ifdef OMP
 #pragma omp parallel for schedule(dynamic), shared(cnt), private(sampler)
+#endif
   for (int dx = 0; dx < resolution.x(); dx++) {
+#ifdef OMP
 #pragma omp atomic
+#endif
     ++cnt;
     printf("\r%.02f%%", cnt * 100.0 / resolution.x());
     sampler.setSeed(omp_get_thread_num());
@@ -33,61 +38,75 @@ void Integrator::render() const {
     for (int dy = 0; dy < resolution.y(); dy++) {
 
       Vec3f L(0, 0, 0);
-      // TODO: generate #spp rays for each pixel and use Monte Carlo integration to compute radiance.
         for (auto i:real_sample_points) {
             auto ray = camera->generateRay(i.x()+dx, i.y()+dy);
-            L+= front_to_back(ray,grid->metaValue<double>("dx"),0.065);
+            L+= front_to_back(ray,grid->metaValue<double>("dx"));
         }
         L/=spp;
+//        cout<<L<<endl;
       camera->getImage()->setPixel(dx, dy, L);
     }
   }
 }
 
-float Integrator::opacity_transfer(float isovalue, float value) const {
+float Integrator::opacity_transfer(float value) const {
     //first for isovalue of iso-surface, second for value to be the opacity
     //using Gauss pdf
 //    auto result= 1 / (variance * sqrt(2 * PI)) * exp(-pow((value - isovalue), 2) / (2 * variance * variance));
-    auto result= exp(-pow((value - isovalue), 2) / (2 * variance * variance));
-    if(result<0.001)
+    auto result= exp(-pow((value - iso_value), 2) / (2 * variance * variance));
+    if(result<0)
             return 0;
         else if(result>1)
             return 1;
         else return result;
 }
 
+float Integrator::opacity_correction(float step, float opacity){
+    return 1- pow((1 - opacity),step);
+}
+
 Vec3f Integrator::color_transfer(float val) const {
     ///TODO
-    return {0,0,0.5};
+    float v=val/0.004;
+    float r= fmod(v,1.0);
+    float g= fmod(v+0.4,1.0);
+    float b= fmod(v+0.8,1.0);
+    return {r,g,b};
 }
 
 float Integrator::interpolation(Vec3f pos) const {
     ///TODO
     FloatGrid::ConstAccessor accessor=grid->getConstAccessor();
     openvdb::tools::GridSampler<FloatGrid::ConstAccessor ,openvdb::tools::BoxSampler> sampler(accessor,grid->transform());
-    ///untested
+//    cout<<pos<<grid->transform().worldToIndex(pos)<<endl;
     return sampler.wsSample(pos);
 }
 
 ///For single-res
-Vec3f Integrator::front_to_back(Ray& ray, float step, float isovalue) const {
+Vec3f Integrator::front_to_back(Ray& ray, float step) const {
     ray.direction.normalize();
     Vec3f result{0,0,0};
     float T=1;
     auto temp_pos=ray.origin;
     auto limit=dist_limit;
+//    int cnt=0;
     while(T>=0.05 && limit>0){
+
         temp_pos += ray.direction*step;
         limit-=step;
+//        cnt++;
         if(!grid->getAccessor().isValueOn(Coord(Vec3i (grid->worldToIndex(temp_pos)))))
             continue;
+
         auto temp_val=interpolation(temp_pos);
 //        if(temp_val>0)
 //            cout<<temp_val<<endl;
-        auto opacity=opacity_transfer(isovalue,temp_val);
-        T*=(1- opacity);
+        auto opacity= opacity_correction(step,opacity_transfer(temp_val));
         result+=T*opacity* color_transfer(temp_val);
+        T*=(1- opacity);
+//        cout<<result<<endl;
     }
+//    cout<<cnt<<endl;
 //    cout<<T<<" "<<limit<<endl;
     return result;
 }

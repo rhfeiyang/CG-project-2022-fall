@@ -15,18 +15,18 @@ struct Local {
 
 
 int main(int argc, char *argv[]) {
-#ifndef TEST
+
     /// load config from json file
     Config config;
     std::ifstream fin;
     std::string file_path;
     if (argc == 1) {
         std::cout << "No json specified, use default path." << std::endl;
-        file_path=GetFilePath("configs/config.json");
+        file_path=GetFilePath("configs/single-small.json");
         fin.open(file_path);
     } else {
         file_path=argv[1];
-        fin.open(file_path);
+        fin.open(GetFilePath(file_path));
     }
     if (!fin.is_open()) {
         std::cerr << "Can not open json file. Exit." << std::endl;
@@ -59,11 +59,12 @@ int main(int argc, char *argv[]) {
 //    initSceneFromConfig(config, scene);
 //load vdb
     VDBLoader<Vec3sGrid> loader(GetFilePath(config.file_path));
+#ifndef TEST
     // init integrator
     auto single_grid=loader.grids[0];
     auto dim=single_grid->evalActiveVoxelBoundingBox().dim();
     std::unique_ptr<Integrator> integrator
-            = std::make_unique<Integrator>(camera, scene, config.spp, single_grid,dim[dim.maxIndex()]*loader.dx[0]);
+            = std::make_unique<Integrator>(camera, scene, config.spp, single_grid,dim[dim.maxIndex()]*loader.dx[0]+2,config.iso_value,config.var);
     std::cout << "Start Rendering..." << std::endl;
     auto start = std::chrono::steady_clock::now();
     // render scene
@@ -105,6 +106,7 @@ int main(int argc, char *argv[]) {
             auto value = iter.getValue();
 //            auto norm = iter->lengthSqr();
             auto coord = iter.getCoord();
+            if(abs(value-0.066)>0.002)
             cout<<grid_idx<<" "<<value<<" "<<iter.getCoord()<<" "<<Grid_world_pos(grid,iter.getCoord())<<endl;
 
         }

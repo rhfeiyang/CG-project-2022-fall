@@ -10,17 +10,19 @@ public:
 //    Integrator(std::shared_ptr<Camera> cam,
 //               std::shared_ptr<Scene> scene, int spp, int max_depth);
     Integrator(std::shared_ptr<Camera> cam,
-                           std::shared_ptr<Scene> scene, int spp, FloatGrid::Ptr &grid, float dist_limit, float var=sqrt(0.0001));
+               std::shared_ptr<Scene> scene, int spp, FloatGrid::Ptr &grid, float dist_limit, float iso_value, float var=sqrt(0.0000001));
 
     void render() const;
 
-    float opacity_transfer(float isovalue, float value) const;
+    float opacity_transfer(float value) const;
 
     Vec3f color_transfer(float val) const;
 
     float interpolation(Vec3f pos) const;
 
-    Vec3f front_to_back(Ray &ray, float step, float isovalue) const;
+    static float opacity_correction(float step, float opacity);
+
+    Vec3f front_to_back(Ray &ray, float step) const;
 
 
 private:
@@ -31,6 +33,7 @@ private:
     float dist_limit;
     FloatGrid::Ptr &grid;
     float variance;
+    float iso_value;
 };
 
 #endif //INTEGRATOR_H_

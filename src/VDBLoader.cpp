@@ -60,8 +60,7 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename){
             floatgrid->insertMeta(name,*value);
         }
         floatgrid->setTransform(grid->transformPtr());
-        grids.push_back(floatgrid);
-        dx.push_back(grid->metaValue<double>("dx"));
+        grids.addGrid(floatgrid);
     }
 //    openvdb::io::File floatfile("../test.vdb");
 //    floatfile.write(grids);
@@ -82,9 +81,11 @@ VDBLoader<GridType>::~VDBLoader() {
     }
 }
 
-template<typename GridType>
-void VDBLoader<GridType>::SortBydx() {
-    std::sort(grids.begin(),grids.end(),[](auto &agrid,auto &bgrid){
-        return agrid->metaValue<double>("dx")< bgrid->metaValue<double>("dx");
-    });
-}
+//template<typename GridType>
+//void VDBLoader<GridType>::SortBydx() {
+//    std::sort(grids.begin(),grids.end(),[](auto &agrid,auto &bgrid){
+//        return agrid->metaValue<double>("dx")< bgrid->metaValue<double>("dx");
+//    });
+//}
+
+

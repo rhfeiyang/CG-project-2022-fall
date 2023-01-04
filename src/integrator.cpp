@@ -67,7 +67,7 @@ float Integrator::opacity_correction(float step, float opacity){
 
 Vec3f Integrator::color_transfer(float val) const {
     ///TODO
-    float v=val/0.004;
+    float v=val/0.006;
     float r= fmod(v,1.0);
     float g= fmod(v+0.4,1.0);
     float b= fmod(v+0.8,1.0);
@@ -76,15 +76,29 @@ Vec3f Integrator::color_transfer(float val) const {
 
 float Integrator::interpolation(Vec3f pos) const {
     ///TODO
+//    pos={0.0,0.0,0.05};
     FloatGrid::ConstAccessor accessor=grid->getConstAccessor();
     openvdb::tools::GridSampler<FloatGrid::ConstAccessor ,openvdb::tools::BoxSampler> sampler(accessor,grid->transform());
 //    cout<<pos<<grid->transform().worldToIndex(pos)<<endl;
+//    cout<<grid->getAccessor().getValue({0, 0, 0})<<" "<<
+//        grid->getAccessor().getValue({1, 0, 0})<<" "<<
+//        grid->getAccessor().getValue({0, 1, 0})<<" "<<
+//        grid->getAccessor().getValue({0, 0, 1})<<" "<<
+//        grid->getAccessor().getValue({1, 1, 0})<<" "<<
+//        grid->getAccessor().getValue({1, 0, 1})<<" "<<
+//        grid->getAccessor().getValue({0, 1, 1})<<" "<<
+//        grid->getAccessor().getValue({1, 1, 1})<<endl;
+//    cout<<sampler.wsSample(pos)<<endl;
     return sampler.wsSample(pos);
+//    openvdb::tools::GridSampler<FloatGrid , openvdb::tools::BoxSampler> sampler(grid->tree(),grid->transform());
+//    auto world_value=sampler.wsSample(pos);
+//    return world_value;
 }
 
 ///For single-res
 Vec3f Integrator::front_to_back(Ray& ray, float step) const {
     ray.direction.normalize();
+//    cout<<ray.direction<<endl;
     Vec3f result{0,0,0};
     float T=1;
     auto temp_pos=ray.origin;

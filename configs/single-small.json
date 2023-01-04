@@ -1,5 +1,5 @@
 {
-  "spp": 25,
+  "spp": 5,
   "image_resolution" : [700, 500],
   "cam_config" : {
     "position" : [7,-2,3],
@@ -9,6 +9,6 @@
     "focal_length" : 1
   },
   "file_path": "../resource/single-res small.vdb",
-  "iso_value": 0.065,
-  "var": 0.0004
+  "iso_value": 0.062,
+  "var": 0.001
 }

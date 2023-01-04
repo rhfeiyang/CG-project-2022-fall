@@ -61,10 +61,11 @@ int main(int argc, char *argv[]) {
     VDBLoader<Vec3sGrid> loader(GetFilePath(config.file_path));
 #ifndef TEST
     // init integrator
-    auto single_grid=loader.grids[0];
-    auto dim=single_grid->evalActiveVoxelBoundingBox().dim();
+    auto single_grid=loader.grids.grids[0];
+    auto length=(loader.grids.wbbox.max()-loader.grids.wbbox.min())[loader.grids.wbbox.maxExtent()];
+//    auto dim=single_grid->evalActiveVoxelBoundingBox().dim();
     std::unique_ptr<Integrator> integrator
-            = std::make_unique<Integrator>(camera, scene, config.spp, single_grid,dim[dim.maxIndex()]*loader.dx[0]+2,config.iso_value,config.var);
+            = std::make_unique<Integrator>(camera, scene, config.spp, single_grid,length+2,config.iso_value,config.var);
     std::cout << "Start Rendering..." << std::endl;
     auto start = std::chrono::steady_clock::now();
     // render scene

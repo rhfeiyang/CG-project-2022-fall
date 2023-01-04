@@ -31,6 +31,8 @@ using Vec2i=openvdb::Vec2i;
 using Mat4f=openvdb::Mat4s;
 using Mat3f=openvdb::Mat3s;
 using Coord=openvdb::Coord;
+using iBBox=openvdb::CoordBBox;
+using wBBox=openvdb::BBoxd;
 using Vec3sGrid=openvdb::v10_0::Vec3SGrid;
 using FloatGrid=openvdb::v10_0::FloatGrid;
 
@@ -63,7 +65,18 @@ using gMat4 = glm::mat<4, 4, Float, glm::defaultp>;
 
 
 //template<typename GridType>
-Vec3f Grid_world_pos(openvdb::GridBase::Ptr grid, Coord coord);
+
+//Vec3f Grid_world_pos(openvdb::GridBase::Ptr grid, Coord coord);
 std::string GetFilePath(const std::string& target, int depth = 5);
+
+struct Grids_data{
+    void addGrid(const FloatGrid::Ptr& grid);
+    std::vector<FloatGrid::Ptr> grids;
+    std::vector<double> dx;
+    double max_dx=std::numeric_limits<double>::min();
+    double min_dx=std::numeric_limits<double>::max();
+//    Vec3f origin=Vec3f{std::numeric_limits<float>::max(),std::numeric_limits<float>::max(),std::numeric_limits<float>::max()};
+    wBBox wbbox;
+};
 //Mat4f Mat4g2v(glm::)
 #endif //CG_PROJECT_2022_FALL_COMMON_H

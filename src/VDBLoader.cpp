@@ -48,6 +48,7 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename){
 
         FloatGrid::Ptr floatgrid=FloatGrid::create();
         auto accessor=floatgrid->getAccessor();
+
         for(auto ite=grid->beginValueAll();ite;++ite){
             auto coord=ite.getCoord();
             auto vec=ite.getValue();
@@ -64,8 +65,8 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename){
         floatgrid->setTransform(grid->transformPtr());
         grids.addGrid(floatgrid);
     }
-//    openvdb::io::File floatfile("../test.vdb");
-//    floatfile.write(grids);
+//    openvdb::io::File floatfile("../testbig.vdb");
+//    floatfile.write(grids.grids);
 //    floatfile.close();
 //    auto grid=openvdb::gridPtrCast<openvdb::Vec3fGrid>(grids[0]);
 //    for(auto ite=grid->beginValueOn();ite;++ite){

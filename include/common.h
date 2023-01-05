@@ -26,6 +26,7 @@ using Vec4f=openvdb::Vec4f;
 using Vec3f=openvdb::Vec3f;
 using Vec3i=openvdb::Vec3i;
 using Vec3d=openvdb::Vec3d;
+using Vec3R=openvdb::Vec3R;
 using Vec2f=openvdb::Vec2f;
 using Vec2i=openvdb::Vec2i;
 using Mat4f=openvdb::Mat4s;

@@ -1,5 +1,5 @@
 {
-  "spp": 5,
+  "spp": 1,
   "image_resolution" : [700, 500],
   "cam_config" : {
     "position" : [7,-2,3],
@@ -10,5 +10,5 @@
   },
   "file_path": "../resource/single-res big.vdb",
   "iso_value": 0.03,
-  "var": 0.005
+  "var": 0.01
 }

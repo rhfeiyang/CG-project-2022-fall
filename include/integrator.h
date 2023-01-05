@@ -34,6 +34,8 @@ private:
     FloatGrid::Ptr &grid;
     float variance;
     float iso_value;
+
+//    bool isNearvalueon(Vec3f pos) const;
 };
 
 #endif //INTEGRATOR_H_

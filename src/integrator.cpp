@@ -55,13 +55,17 @@ float Integrator::opacity_transfer(float value) const {
 //    auto result= 1 / (variance * sqrt(2 * PI)) * exp(-pow((value - isovalue), 2) / (2 * variance * variance));
 //    if(abs(value-iso_value)>0.001) return 0;
 //    if(value>=0.065 ) return 0;
-    if (value<=EPS) return 0;
-    auto result=  exp(-pow((value - iso_value), 2) / (2 * variance * variance));
-    if(result<0)
-            return 0;
-    else if(result>1)
-        return 1;
-    else return result;
+//    if (value<=EPS) return 0;
+//    auto result=  exp(-pow((value - iso_value), 2) / (2 * variance * variance));
+//    if(result<0)
+//            return 0;
+//    else if(result>1)
+//        return 1;
+//    else
+//    return result;
+    auto result1=  exp(-pow((value - 0.03), 2) / (2 * variance * variance));
+    auto result2=  exp(-pow((value - 0.064), 2) / (2 * variance * variance));
+    return std::max(result1, result2);
 
 
 //    if(value>0.025&&value<0.065) return 0.9;
@@ -75,7 +79,7 @@ float Integrator::opacity_correction(float step, float opacity){
 
 Vec3f Integrator::color_transfer(float val) const {
     ///TODO
-    float v=val/0.006;
+    float v=val/0.06;
     float r= fmod(v,1.0);
     float g= fmod(v+0.4,1.0);
     float b= fmod(v+0.8,1.0);
@@ -88,7 +92,7 @@ float Integrator::interpolation(Vec3f pos) const {
 //    pos={0.0,0.0,0.05};
     FloatGrid::ConstAccessor accessor=grid->getConstAccessor();
 
-    openvdb::tools::GridSampler<FloatGrid::ConstAccessor ,openvdb::tools::PointSampler> sampler(accessor,grid->transform());
+    openvdb::tools::GridSampler<FloatGrid::ConstAccessor ,openvdb::tools::BoxSampler> sampler(accessor,grid->transform());
 //    cout<<pos<<grid->transform().worldToIndex(pos)<<endl;
 //    cout<<grid->getAccessor().getValue({0, 0, 0})<<" "<<
 //        grid->getAccessor().getValue({1, 0, 0})<<" "<<
@@ -104,35 +108,117 @@ float Integrator::interpolation(Vec3f pos) const {
 //    auto world_value=sampler.wsSample(pos);
 //    return world_value;
 }
+template<class ValueT, class TreeT, size_t N>
+inline int probeValues(ValueT (&data)[N][N][N], const TreeT& inTree, Coord ijk)
+{
+    int hasActiveValues = 0;
+    hasActiveValues += inTree.probeValue(ijk, data[0][0][0]); // i, j, k
 
+    ijk[2] += 1;
+    hasActiveValues += inTree.probeValue(ijk, data[0][0][1]); // i, j, k + 1
+
+    ijk[1] += 1;
+    hasActiveValues += inTree.probeValue(ijk, data[0][1][1]); // i, j+1, k + 1
+
+    ijk[2] -= 1;
+    hasActiveValues += inTree.probeValue(ijk, data[0][1][0]); // i, j+1, k
+
+    ijk[0] += 1;
+    ijk[1] -= 1;
+    hasActiveValues += inTree.probeValue(ijk, data[1][0][0]); // i+1, j, k
+
+    ijk[2] += 1;
+    hasActiveValues += inTree.probeValue(ijk, data[1][0][1]); // i+1, j, k + 1
+
+    ijk[1] += 1;
+    hasActiveValues += inTree.probeValue(ijk, data[1][1][1]); // i+1, j+1, k + 1
+
+    ijk[2] -= 1;
+    hasActiveValues += inTree.probeValue(ijk, data[1][1][0]); // i+1, j+1, k
+
+    return hasActiveValues;
+}
+
+template<class ValueT, size_t N>
+inline ValueT trilinearInterpolation(ValueT (&data)[N][N][N], const Vec3R& uvw)
+{
+    auto _interpolate = [](const ValueT& a, const ValueT& b, double weight)
+    {
+        OPENVDB_NO_TYPE_CONVERSION_WARNING_BEGIN
+        const auto temp = (b - a) * weight;
+        OPENVDB_NO_TYPE_CONVERSION_WARNING_END
+        return static_cast<ValueT>(a + ValueT(temp));
+    };
+
+    // Trilinear interpolation:
+    // The eight surrounding latice values are used to construct the result. \n
+    // result(x,y,z) =
+    //     v000 (1-x)(1-y)(1-z) + v001 (1-x)(1-y)z + v010 (1-x)y(1-z) + v011 (1-x)yz
+    //   + v100 x(1-y)(1-z)     + v101 x(1-y)z     + v110 xy(1-z)     + v111 xyz
+
+    return  _interpolate(
+            _interpolate(
+                    _interpolate(data[0][0][0], data[0][0][1], uvw[2]),
+                    _interpolate(data[0][1][0], data[0][1][1], uvw[2]),
+                    uvw[1]),
+            _interpolate(
+                    _interpolate(data[1][0][0], data[1][0][1], uvw[2]),
+                    _interpolate(data[1][1][0], data[1][1][1], uvw[2]),
+                    uvw[1]),
+            uvw[0]);
+}
+
+template<class TreeT>
+inline int
+sample(const TreeT& inTree, const Vec3R& inCoord,
+       typename TreeT::ValueType& result)
+{
+    using ValueT = typename TreeT::ValueType;
+
+    const Vec3i inIdx =openvdb::tools::local_util::floorVec3(inCoord);
+    const Vec3R uvw = inCoord - inIdx;
+
+    // Retrieve the values of the eight voxels surrounding the
+    // fractional source coordinates.
+    ValueT data[2][2][2];
+
+    const int hasActiveValues = probeValues(data, inTree, Coord(inIdx));
+
+    result = trilinearInterpolation(data, uvw);
+
+    return hasActiveValues;
+}
 ///For single-res
 Vec3f Integrator::front_to_back(Ray& ray, float step) const {
     ray.direction.normalize();
+    step/=4;
 //    cout<<ray.direction<<endl;
     Vec3f result{0,0,0};
-//    float T=1;
-    float O=0;
+    float T=1;
     auto temp_pos=ray.origin;
     auto limit=dist_limit;
 //    int cnt=0;
-    while(O<1 && limit>0){
+    while(T>=0.05 && limit>0){
 
-        temp_pos += (ray.direction*step);
+        temp_pos += ray.direction*step;
         limit-=step;
 //        cnt++;
-//        if(!grid->getAccessor().isValueOn(Coord(Vec3i (grid->worldToIndex(temp_pos)))))
-//            continue;
 
-        auto temp_val=interpolation(temp_pos);
+        float temp_val=0;
+        openvdb::tools::BoxSampler sampler;
+        float opacity=0;
+        int activeValue= sample(grid->tree(),grid->worldToIndex(temp_pos),temp_val);
+        if(activeValue==8){
+            opacity= opacity_correction(step,opacity_transfer(temp_val));
+        }
+
+
+
 //        if(temp_val>0)
 //            cout<<temp_val<<endl;
-        auto opacity= opacity_correction(step,opacity_transfer(temp_val));
-//        result+=T*opacity* color_transfer(temp_val);
-//        T*=(1- opacity);
 
-        result+=((1-O)*opacity*color_transfer(temp_val));
-        O+=((1-O)*opacity);
-
+        result+=T*opacity* color_transfer(temp_val);
+        T*=(1.0- opacity);
 //        cout<<result<<endl;
     }
 //    cout<<cnt<<endl;

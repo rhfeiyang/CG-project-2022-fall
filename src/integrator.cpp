@@ -63,11 +63,17 @@ float Integrator::opacity_transfer(float value) const {
 //        return 1;
 //    else
 //    return result;
-    auto result1=  exp(-pow((value - 0.03), 2) / (2 * variance * variance));
-    auto result2=  exp(-pow((value - 0.064), 2) / (2 * variance * variance));
-    return std::max(result1, result2);
-
-
+    if (0.0666 < value && value < 0.0667) return 0;
+    auto result1=  exp(-pow((value - 0.045), 2) / (2 * 0.01 * 0.01));
+//    auto result2=  exp(-pow((value - 0.03), 2) / (2 * 0.005 * 0.005));
+//    return std::max(result1, result2);
+//    auto result3=  exp(-pow((value - 0.04), 2) / (2 * variance * variance));
+//    auto result4=  exp(-pow((value - 0.05), 2) / (2 * variance * variance));
+//    auto result5=  exp(-pow((value - 0.06), 2) / (2 * variance * variance));
+//    return std::max(std::max(result1, result2), std::max(result3, result4));
+//    return std::max(std::max(std::max(result1, result2), std::max(result3, result4)), result5);
+    return  result1;
+//
 //    if(value>0.025&&value<0.065) return 0.9;
 //    else return 0;
 
@@ -198,7 +204,7 @@ Vec3f Integrator::front_to_back(Ray& ray, float step) const {
     auto temp_pos=ray.origin;
     auto limit=dist_limit;
 //    int cnt=0;
-    while(T>=0.05 && limit>0){
+    while( limit>0){
 
         temp_pos += ray.direction*step;
         limit-=step;

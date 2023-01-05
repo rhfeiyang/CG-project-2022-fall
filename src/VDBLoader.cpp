@@ -48,11 +48,13 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename){
 
         FloatGrid::Ptr floatgrid=FloatGrid::create();
         auto accessor=floatgrid->getAccessor();
-        for(auto ite=grid->beginValueOn();ite;++ite){
+        for(auto ite=grid->beginValueAll();ite;++ite){
             auto coord=ite.getCoord();
             auto vec=ite.getValue();
             auto vec_norm=vec.length();
+
             accessor.setValue(coord,vec_norm);
+            accessor.setActiveState(coord,ite.isValueOn());
         }
         for (auto ite=grid->beginMeta();ite!=grid->endMeta();++ite) {
             auto name=ite->first;

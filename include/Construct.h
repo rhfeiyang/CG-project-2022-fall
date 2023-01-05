@@ -44,7 +44,7 @@ public:
     ///For a point in the world, find its contribute grids, then do the interpolation....
     Kdtree(Grids_data& gridsData);
 
-    std::vector<int> grid_contribute(const Vec3f &xyz)const;
+    std::vector<int> grid_contribut0e(const Vec3f &xyz)const;
 //    float Get_value(const Coord& ijk) const;
 //    void setValue(const Coord& xyz, double value);
 //    bool isValueOn(const Coord& xyz) const;

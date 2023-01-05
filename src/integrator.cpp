@@ -53,12 +53,20 @@ float Integrator::opacity_transfer(float value) const {
     //first for isovalue of iso-surface, second for value to be the opacity
     //using Gauss pdf
 //    auto result= 1 / (variance * sqrt(2 * PI)) * exp(-pow((value - isovalue), 2) / (2 * variance * variance));
-    auto result= exp(-pow((value - iso_value), 2) / (2 * variance * variance));
+//    if(abs(value-iso_value)>0.001) return 0;
+//    if(value>=0.065 ) return 0;
+    if (value<=EPS) return 0;
+    auto result=  exp(-pow((value - iso_value), 2) / (2 * variance * variance));
     if(result<0)
             return 0;
-        else if(result>1)
-            return 1;
-        else return result;
+    else if(result>1)
+        return 1;
+    else return result;
+
+
+//    if(value>0.025&&value<0.065) return 0.9;
+//    else return 0;
+
 }
 
 float Integrator::opacity_correction(float step, float opacity){
@@ -72,13 +80,15 @@ Vec3f Integrator::color_transfer(float val) const {
     float g= fmod(v+0.4,1.0);
     float b= fmod(v+0.8,1.0);
     return {r,g,b};
+//    return{0.4,0.4,0.6};
 }
 
 float Integrator::interpolation(Vec3f pos) const {
     ///TODO
 //    pos={0.0,0.0,0.05};
     FloatGrid::ConstAccessor accessor=grid->getConstAccessor();
-    openvdb::tools::GridSampler<FloatGrid::ConstAccessor ,openvdb::tools::BoxSampler> sampler(accessor,grid->transform());
+
+    openvdb::tools::GridSampler<FloatGrid::ConstAccessor ,openvdb::tools::PointSampler> sampler(accessor,grid->transform());
 //    cout<<pos<<grid->transform().worldToIndex(pos)<<endl;
 //    cout<<grid->getAccessor().getValue({0, 0, 0})<<" "<<
 //        grid->getAccessor().getValue({1, 0, 0})<<" "<<
@@ -100,24 +110,29 @@ Vec3f Integrator::front_to_back(Ray& ray, float step) const {
     ray.direction.normalize();
 //    cout<<ray.direction<<endl;
     Vec3f result{0,0,0};
-    float T=1;
+//    float T=1;
+    float O=0;
     auto temp_pos=ray.origin;
     auto limit=dist_limit;
 //    int cnt=0;
-    while(T>=0.05 && limit>0){
+    while(O<1 && limit>0){
 
-        temp_pos += ray.direction*step;
+        temp_pos += (ray.direction*step);
         limit-=step;
 //        cnt++;
-        if(!grid->getAccessor().isValueOn(Coord(Vec3i (grid->worldToIndex(temp_pos)))))
-            continue;
+//        if(!grid->getAccessor().isValueOn(Coord(Vec3i (grid->worldToIndex(temp_pos)))))
+//            continue;
 
         auto temp_val=interpolation(temp_pos);
 //        if(temp_val>0)
 //            cout<<temp_val<<endl;
         auto opacity= opacity_correction(step,opacity_transfer(temp_val));
-        result+=T*opacity* color_transfer(temp_val);
-        T*=(1- opacity);
+//        result+=T*opacity* color_transfer(temp_val);
+//        T*=(1- opacity);
+
+        result+=((1-O)*opacity*color_transfer(temp_val));
+        O+=((1-O)*opacity);
+
 //        cout<<result<<endl;
     }
 //    cout<<cnt<<endl;

@@ -11,11 +11,12 @@
 //}
 #define OMP
 Integrator::Integrator(std::shared_ptr<Camera> cam,
-                       std::shared_ptr<Scene> scene, int spp, FloatGrid::Ptr &grid, float dist_limit, float iso_value, float var)
-        : camera(std::move(cam)), scene(std::move(scene)), spp(spp), grid(grid), dist_limit(dist_limit), variance(var), iso_value(iso_value) {
+                       std::shared_ptr<Scene> scene, int spp, Grids_data &gridsData, float dist_limit, float iso_value, float var)
+        : camera(std::move(cam)), scene(std::move(scene)), spp(spp), gridsData(gridsData), dist_limit(dist_limit), variance(var), iso_value(iso_value) {
 }
 
 void Integrator::render() const {
+    auto grid=gridsData.grids[0];
   Vec2i resolution = camera->getImage()->getResolution();
   Sampler sampler;
   int cnt = 0;
@@ -63,19 +64,22 @@ float Integrator::opacity_transfer(float value) const {
 //        return 1;
 //    else
 //    return result;
-    if (0.0666 < value && value < 0.0667) return 0;
-    auto result1=  exp(-pow((value - 0.045), 2) / (2 * 0.01 * 0.01));
-//    auto result2=  exp(-pow((value - 0.03), 2) / (2 * 0.005 * 0.005));
+//    return exp(-pow((value - 0.06), 2) / (2 * 0.0015 * 0.0015));
+
+//    if (0.065 < value && value < 0.068) return 0;
+//    auto result1=  exp(-pow((value - 0.03), 2) / (2 * 0.01 * 0.01));
+//    auto result2=  exp(-pow((value - 0.06), 2) / (2 * 0.002 * 0.002));
 //    return std::max(result1, result2);
 //    auto result3=  exp(-pow((value - 0.04), 2) / (2 * variance * variance));
 //    auto result4=  exp(-pow((value - 0.05), 2) / (2 * variance * variance));
 //    auto result5=  exp(-pow((value - 0.06), 2) / (2 * variance * variance));
 //    return std::max(std::max(result1, result2), std::max(result3, result4));
 //    return std::max(std::max(std::max(result1, result2), std::max(result3, result4)), result5);
-    return  result1;
+//    return  result1;
 //
-//    if(value>0.025&&value<0.065) return 0.9;
+//    if(value>0.01 && value<0.065) return 0.7;
 //    else return 0;
+return 100 * std::max(0.0, (0.005 - abs(value - 0.06)));
 
 }
 
@@ -96,6 +100,7 @@ Vec3f Integrator::color_transfer(float val) const {
 float Integrator::interpolation(Vec3f pos) const {
     ///TODO
 //    pos={0.0,0.0,0.05};
+    auto grid=gridsData.grids[0];
     FloatGrid::ConstAccessor accessor=grid->getConstAccessor();
 
     openvdb::tools::GridSampler<FloatGrid::ConstAccessor ,openvdb::tools::BoxSampler> sampler(accessor,grid->transform());
@@ -196,10 +201,7 @@ sample(const TreeT& inTree, const Vec3R& inCoord,
 }
 ///For single-res
 Vec3f Integrator::front_to_back(Ray& ray, float step) const {
-    Grids_data G;
-    G.addGrid(grid);
-
-
+    auto grid=gridsData.grids[0];
     ray.direction.normalize();
     step/=4;
 //    cout<<ray.direction<<endl;
@@ -213,15 +215,13 @@ Vec3f Integrator::front_to_back(Ray& ray, float step) const {
         temp_pos += ray.direction*step;
         limit-=step;
 //        cnt++;
-        if(!G.whole_wbbox.isInside(temp_pos))
+        if(!(gridsData.wbbox.isInside(temp_pos)))
             continue;
-
         float temp_val=0;
 //        openvdb::tools::BoxSampler sampler;
-        float opacity=0;
-        int activeValue= sample(grid->tree(),grid->worldToIndex(temp_pos),temp_val);
+        sample(grid->tree(),grid->worldToIndex(temp_pos),temp_val);
 
-        opacity= opacity_correction(step,opacity_transfer(temp_val));
+        auto opacity= opacity_correction(step,opacity_transfer(temp_val));
 
 //        if(temp_val>0)
 //            cout<<temp_val<<endl;

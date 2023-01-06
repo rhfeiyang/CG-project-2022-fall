@@ -16,7 +16,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <openvdb/tools/Interpolation.h>
-#include <openvdb/tools/ChangeBackground.h>
 
 #include <iostream>
 #include <fstream>

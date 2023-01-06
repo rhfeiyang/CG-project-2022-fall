@@ -63,6 +63,7 @@ int main(int argc, char *argv[]) {
 
 #ifndef TEST
     // init integrator
+    Kdtree kdtree(loader.grids);
     auto single_grid=loader.grids.grids[0];
     auto length=(loader.grids.whole_wbbox.max() - loader.grids.whole_wbbox.min())[loader.grids.whole_wbbox.maxExtent()];
 //    auto dim=single_grid->evalActiveVoxelBoundingBox().dim();

@@ -23,4 +23,8 @@ struct Ray {
   }
 };
 
+///True if hit, t_in t_out in result
+bool ray_bbox_range(Ray ray, wBBox bbox,std::array<float,2>& result);
+
+
 #endif //RAY_H_

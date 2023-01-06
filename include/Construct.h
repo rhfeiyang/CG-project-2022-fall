@@ -25,14 +25,14 @@ public:
 
     ~KdTreeNode();
 //    bool intersect(Interaction &interaction, const Ray &ray) const;
-    [[nodiscard]] bool isLeaf() const { return leftChild!= nullptr && rightChild!= nullptr; }
+    [[nodiscard]] bool isLeaf() const { return leftChild== nullptr && rightChild== nullptr; }
 
     static std::vector<wBBox> splitWbbox(const wBBox& bbox, int axis, double pos);
 
     friend Kdtree;
 
 private:
-    int partition_axis=-1;
+    int partition_axis;
     double partition_pos;
     std::vector<int> contribute_grids;
     KdTreeNode *leftChild, *rightChild;

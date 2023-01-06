@@ -15,7 +15,7 @@ std::vector<wBBox> KdTreeNode::splitWbbox(const wBBox &bbox, int axis, double po
     return splitbbox;
 }
 
-KdTreeNode::KdTreeNode(Grids_data& gridsData,std::vector<int> contri_grids,wBBox bbox, int depth):contribute_grids(std::move(contri_grids)) {
+KdTreeNode::KdTreeNode(Grids_data& gridsData,std::vector<int> contri_grids,wBBox bbox, int depth):contribute_grids(std::move(contri_grids)),rightChild(nullptr),leftChild(nullptr) {
     ///For construct: find the longest axis by bbox, find a pos to create two children
     ///For leaf: create a brick, store cells
     ///Can depth has some effect?

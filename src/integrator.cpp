@@ -5,7 +5,7 @@
 #include <utility>
 #include <cmath>
 
-#define OMP
+//#define OMP
 
 Integrator::Integrator(std::shared_ptr<Camera> cam,
                        std::shared_ptr<Scene> scene, int spp, Grids_data &gridsData, float iso_value,

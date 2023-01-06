@@ -1,8 +1,8 @@
 {
   "spp": 1,
-  "image_resolution" : [800, 400],
+  "image_resolution" : [500, 500],
   "cam_config" : {
-    "position" : [6.5,-3,3],
+    "position" : [6.5,-8,3],
     "look_at": [6.5,2,3],
     "ref_up" : [0,0,1],
     "vertical_fov": 45,

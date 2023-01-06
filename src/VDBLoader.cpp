@@ -63,7 +63,7 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename) {
             accessor.setValue(coord, value);
             accessor.setActiveState(coord, ite.isValueOn());
         }
-        openvdb::tools::changeBackground(floatgrid->tree(), std::numeric_limits<float>::max());
+        openvdb::tools::changeBackground(floatgrid->tree(), (float)1e30);
 
 //        for(auto ite=floatgrid->beginValueAll();ite;++ite) {
 //            if (!ite.isValueOn()) cout << ite.getValue() << endl;

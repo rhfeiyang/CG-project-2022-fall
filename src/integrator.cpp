@@ -69,73 +69,125 @@ Vec3f Integrator::color_transfer(float val) const {
     return {0,0.8, 1.0};
 }
 
-template<class ValueT, class TreeT, size_t N>
-inline int probeValues(ValueT (&data)[N][N][N], const TreeT &inTree, Coord ijk) {
-    int hasActiveValues = 0;
-    hasActiveValues += inTree.probeValue(ijk, data[0][0][0]); // i, j, k
+//template<class ValueT, class TreeT, size_t N>
+//inline int probeValues(ValueT (&data)[N][N][N], const TreeT &inTree, Coord ijk) {
+//    int hasActiveValues = 0;
+//    hasActiveValues += inTree.probeValue(ijk, data[0][0][0]); // i, j, k
+//
+//    ijk[2] += 1;
+//    hasActiveValues += inTree.probeValue(ijk, data[0][0][1]); // i, j, k + 1
+//
+//    ijk[1] += 1;
+//    hasActiveValues += inTree.probeValue(ijk, data[0][1][1]); // i, j+1, k + 1
+//
+//    ijk[2] -= 1;
+//    hasActiveValues += inTree.probeValue(ijk, data[0][1][0]); // i, j+1, k
+//
+//    ijk[0] += 1;
+//    ijk[1] -= 1;
+//    hasActiveValues += inTree.probeValue(ijk, data[1][0][0]); // i+1, j, k
+//
+//    ijk[2] += 1;
+//    hasActiveValues += inTree.probeValue(ijk, data[1][0][1]); // i+1, j, k + 1
+//
+//    ijk[1] += 1;
+//    hasActiveValues += inTree.probeValue(ijk, data[1][1][1]); // i+1, j+1, k + 1
+//
+//    ijk[2] -= 1;
+//    hasActiveValues += inTree.probeValue(ijk, data[1][1][0]); // i+1, j+1, k
+//
+//    return hasActiveValues;
+//}
 
-    ijk[2] += 1;
-    hasActiveValues += inTree.probeValue(ijk, data[0][0][1]); // i, j, k + 1
-
-    ijk[1] += 1;
-    hasActiveValues += inTree.probeValue(ijk, data[0][1][1]); // i, j+1, k + 1
-
-    ijk[2] -= 1;
-    hasActiveValues += inTree.probeValue(ijk, data[0][1][0]); // i, j+1, k
-
-    ijk[0] += 1;
-    ijk[1] -= 1;
-    hasActiveValues += inTree.probeValue(ijk, data[1][0][0]); // i+1, j, k
-
-    ijk[2] += 1;
-    hasActiveValues += inTree.probeValue(ijk, data[1][0][1]); // i+1, j, k + 1
-
-    ijk[1] += 1;
-    hasActiveValues += inTree.probeValue(ijk, data[1][1][1]); // i+1, j+1, k + 1
-
-    ijk[2] -= 1;
-    hasActiveValues += inTree.probeValue(ijk, data[1][1][0]); // i+1, j+1, k
-
-    return hasActiveValues;
+inline float Hhat(Vec3R cp, float dx, Vec3f pos) {
+//    return 1;
+    float H_hat = 1;
+    for (int i = 0; i < 3; i++) {
+        H_hat *= std::max(0.0, 1.0 - abs(cp[i] + 0.5 * dx - pos[i]) / dx);
+    }
+    return H_hat;
 }
 
-template<class ValueT, size_t N>
-inline ValueT trilinearInterpolation(ValueT (&data)[N][N][N], const Vec3R &uvw) {
-    auto _interpolate = [](const ValueT &a, const ValueT &b, double weight) {
-        OPENVDB_NO_TYPE_CONVERSION_WARNING_BEGIN
-        const auto temp = (b - a) * weight;
-        OPENVDB_NO_TYPE_CONVERSION_WARNING_END
-        return static_cast<ValueT>(a + ValueT(temp));
-    };
-    return _interpolate(_interpolate(_interpolate(data[0][0][0], data[0][0][1], uvw[2]),
-                                     _interpolate(data[0][1][0], data[0][1][1], uvw[2]),
-                                     uvw[1]),
-                        _interpolate(_interpolate(data[1][0][0], data[1][0][1], uvw[2]),
-                                     _interpolate(data[1][1][0], data[1][1][1], uvw[2]),
-                                     uvw[1]),
-                        uvw[0]);
+inline float AMR_basis(float dx, const FloatGrid & grid, const Vec3f &pos) {
+//    using ValueT = typename TreeT::ValueType;
+    const Vec3i inIdx = openvdb::tools::local_util::floorVec3(grid.worldToIndex(pos));
+//    const Vec3R uvw = inCoord - inIdx;
+    // Retrieve the values of the eight voxels surrounding the
+    // fractional source coordinates.
+    float data[2][2][2];
+    const auto& inTree = grid.tree();
+    auto ijk = Coord(inIdx);
+    float sum_weights = 0;
+    float sum_weightedValues = 0;
+
+    if (inTree.probeValue(ijk, data[0][0][0])) { // i, j, k
+        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+        sum_weights += H_hat;
+        sum_weightedValues += H_hat * data[0][0][0];
+    }
+    ijk[2] += 1;
+    if (inTree.probeValue(ijk, data[0][0][1])) { // i, j, k + 1
+        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+        sum_weights += H_hat;
+        sum_weightedValues += H_hat * data[0][0][1];
+    }
+    ijk[1] += 1;
+    if (inTree.probeValue(ijk, data[0][1][1])) { // i, j + 1, k + 1
+        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+        sum_weights += H_hat;
+        sum_weightedValues += H_hat * data[0][1][1];
+    }
+    ijk[2] -= 1;
+    if (inTree.probeValue(ijk, data[0][1][0])) { // i, j + 1, k
+        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+        sum_weights += H_hat;
+        sum_weightedValues += H_hat * data[0][1][0];
+    }
+    ijk[0] += 1;
+    ijk[1] -= 1;
+    if (inTree.probeValue(ijk, data[1][0][0])) { // i + 1, j, k
+        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+        sum_weights += H_hat;
+        sum_weightedValues += H_hat * data[1][0][0];
+    }
+    ijk[2] += 1;
+    if (inTree.probeValue(ijk, data[1][0][1])) { // i + 1, j, k + 1
+        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+        sum_weights += H_hat;
+        sum_weightedValues += H_hat * data[1][0][1];
+    }
+    ijk[1] += 1;
+    if (inTree.probeValue(ijk, data[1][1][1])) { // i + 1, j + 1, k + 1
+        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+        sum_weights += H_hat;
+        sum_weightedValues += H_hat * data[1][1][1];
+    }
+    ijk[2] -= 1;
+    if (inTree.probeValue(ijk, data[1][1][0])) { // i + 1, j + 1, k
+        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+        sum_weights += H_hat;
+        sum_weightedValues += H_hat * data[1][1][0];
+    }
+    return sum_weightedValues / sum_weights;
 }
 
 float Integrator::interpolation(Vec3f pos, const std::vector<int>& grid_idx) const {
 //    //TODO
-//    pos={0.0,0.0,0.05};
     float result=0;
     int cnt=0;
     for(auto i:grid_idx){
         auto grid=gridsData.grids[i];
-        FloatGrid::ConstAccessor accessor = grid->getConstAccessor();
-
-        openvdb::tools::GridSampler<FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor,
-                                                                                                  grid->transform());
-//        openvdb::tools::BoxSampler sampler;
-//        sampler.sample(grid->tree(),grid->worldToIndex(pos),);
-        float value=sampler.wsSample(pos);
-//        if(value>1 && value<1e5) cout<<value<<endl;
-        if(value<1) {
+//        FloatGrid::ConstAccessor accessor = grid->getConstAccessor();
+//        openvdb::tools::GridSampler
+//        <FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor, grid->transform());
+//        float value=sampler.wsSample(pos);
+        float value = AMR_basis((float)gridsData.dx[i], *grid, pos);
+        if(value < 1) {
             result += value;
             cnt++;
         }
     }
+//    cout << "NB";
     result/=float(cnt);
     return result;
 //    cout<<pos<<grid->transform().worldToIndex(pos)<<endl;
@@ -152,22 +204,6 @@ float Integrator::interpolation(Vec3f pos, const std::vector<int>& grid_idx) con
 //    openvdb::tools::GridSampler<FloatGrid , openvdb::tools::BoxSampler> sampler(grid->tree(),grid->transform());
 
 
-}
-
-template<class TreeT>
-inline int
-sample(const TreeT &inTree, const Vec3R &inCoord,
-       typename TreeT::ValueType &result) {
-    using ValueT = typename TreeT::ValueType;
-    const Vec3i inIdx = openvdb::tools::local_util::floorVec3(inCoord);
-    const Vec3R uvw = inCoord - inIdx;
-    // Retrieve the values of the eight voxels surrounding the
-    // fractional source coordinates.
-    ValueT data[2][2][2];
-    const int hasActiveValues = probeValues(data, inTree, Coord(inIdx));
-    if (hasActiveValues) result = trilinearInterpolation(data, uvw);
-    else result = 0;
-    return hasActiveValues;
 }
 
 float Integrator::sample_step(const Vec3f &pos, const std::vector<int>& grid_idx) const {
@@ -281,4 +317,21 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
 //    float b = fmod(v + 0.8, 1.0);
 //    return {r, g, b};
 //    return{0.4,0.4,0.6};
+//}
+
+//template<class ValueT, size_t N>
+//inline ValueT trilinearInterpolation(ValueT (&data)[N][N][N], const Vec3R &uvw) {
+//    auto _interpolate = [](const ValueT &a, const ValueT &b, double weight) {
+//        OPENVDB_NO_TYPE_CONVERSION_WARNING_BEGIN
+//        const auto temp = (b - a) * weight;
+//        OPENVDB_NO_TYPE_CONVERSION_WARNING_END
+//        return static_cast<ValueT>(a + ValueT(temp));
+//    };
+//    return _interpolate(_interpolate(_interpolate(data[0][0][0], data[0][0][1], uvw[2]),
+//                                     _interpolate(data[0][1][0], data[0][1][1], uvw[2]),
+//                                     uvw[1]),
+//                        _interpolate(_interpolate(data[1][0][0], data[1][0][1], uvw[2]),
+//                                     _interpolate(data[1][1][0], data[1][1][1], uvw[2]),
+//                                     uvw[1]),
+//                        uvw[0]);
 //}

@@ -17,13 +17,13 @@ public:
 
     [[nodiscard]] Vec3f color_transfer(float val) const;
 
-    [[nodiscard]] float interpolation(Vec3f pos, const std::vector<int>& grid_idx) const;
+    [[nodiscard]] float interpolation(Vec3f pos, uint32_t grid_idx_bm) const;
 
     static float opacity_correction(float step, float opacity);
 
     Vec3f front_to_back(Ray &ray) const;
 
-    [[nodiscard]] float sample_step(const Vec3f&  pos, const std::vector<int>& grid_idx) const;
+    [[nodiscard]] float sample_step(Vec3f pos, uint32_t grid_idx_bm) const;
 
 private:
     std::shared_ptr<Camera> camera;

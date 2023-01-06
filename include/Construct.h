@@ -10,7 +10,8 @@
 
 struct Pos{
     double pos;
-    int grid_idx;
+//    int grid_idx;
+    uint32_t grid_idx_bm;
     bool isMin;
     bool operator< (const Pos& other) const{
         return pos<other.pos;
@@ -21,7 +22,7 @@ class Kdtree;
 class KdTreeNode {
 public:
     ///Is depth necessary?
-    KdTreeNode(Grids_data& gridsData,std::vector<int> contribute_grids,wBBox bbox, int depth);
+    KdTreeNode(Grids_data& gridsData, uint32_t bm, wBBox bbox, int depth);
 
     ~KdTreeNode();
 //    bool intersect(Interaction &interaction, const Ray &ray) const;
@@ -34,7 +35,10 @@ public:
 private:
     int partition_axis;
     double partition_pos;
-    std::vector<int> contribute_grids;
+//    std::vector<int> contribute_grids;
+    // The i-th digit represents grid i
+    // i.e. 3 -> gird0 + grid1, 5 -> gird0 + gird2
+    uint32_t bitmap;
     KdTreeNode *leftChild, *rightChild;
 //    openvdb::CoordBBox bbox;
 //    std::vector<std::shared_ptr<Cell>> cells;
@@ -51,7 +55,7 @@ public:
     ///For a point in the world, find its contribute grids, then do the interpolation....
     explicit Kdtree(Grids_data& gridsData);
 
-    [[nodiscard]] std::vector<int> grid_contribute(const Vec3f &xyz)const;
+    [[nodiscard]] uint32_t grid_contribute(const Vec3f &xyz)const;
 //    float Get_value(const Coord& ijk) const;
 //    void setValue(const Coord& xyz, double value);
 //    bool isValueOn(const Coord& xyz) const;

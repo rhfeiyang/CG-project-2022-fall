@@ -157,20 +157,23 @@ inline float AMR_basis(float dx, const FloatGrid & grid, const Vec3f &pos) {
 //    return sum_weightedValues / sum_weights;
 }
 
-float Integrator::interpolation(Vec3f pos, const std::vector<int>& grid_idx) const {
+float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm) const {
 //    //TODO
     float result=0;
     int cnt=0;
-    for(auto i:grid_idx){
-        auto grid=gridsData.grids[i];
-//        FloatGrid::ConstAccessor accessor = grid->getConstAccessor();
-//        openvdb::tools::GridSampler
-//        <FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor, grid->transform());
-//        float value=sampler.wsSample(pos);
-        float value = AMR_basis((float)gridsData.dx[i], *grid, pos);
-        if(value < 1) {
-            result += value;
-            cnt++;
+//    for(auto i:grid_idx){
+    for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
+        if (grid_idx_bm & 1) {
+            auto grid = gridsData.grids[i];
+//            FloatGrid::ConstAccessor accessor = grid->getConstAccessor();
+//            openvdb::tools::GridSampler
+//            <FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor, grid->transform());
+//            float value=sampler.wsSample(pos);
+            float value = AMR_basis((float) gridsData.dx[i], *grid, pos);
+            if (value < 1) {
+                result += value;
+                cnt++;
+            }
         }
     }
 //    cout << "NB";
@@ -192,10 +195,13 @@ float Integrator::interpolation(Vec3f pos, const std::vector<int>& grid_idx) con
 
 }
 
-float Integrator::sample_step(const Vec3f &pos, const std::vector<int>& grid_idx) const {
+float Integrator::sample_step(Vec3f pos, uint32_t grid_idx_bm) const{
     float step=std::numeric_limits<float>::max();
-    for(auto i:grid_idx){
-        step= std::min(step, float(gridsData.grids[i]->metaValue<double>("dx")));
+//    for(auto i:grid_idx){
+    for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
+        if (grid_idx_bm & 1) {
+            step = std::min(step, float(gridsData.grids[i]->metaValue<double>("dx")));
+        }
     }
     return step;
 }
@@ -216,9 +222,11 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     while (T>0.05 && limit > 0) {
 //        if (!(gridsData.whole_wbbox.isInside(temp_pos)))
 //            continue;
-        auto contribute_grids=kdtree.grid_contribute(ray.origin);
-        float step= sample_step(ray.origin,contribute_grids);
-        auto temp_val = interpolation(ray.origin,contribute_grids);
+        auto contribute_grids_bm=kdtree.grid_contribute(ray.origin);
+//        float step= sample_step(ray.origin,contribute_grids);
+//        auto temp_val = interpolation(ray.origin,contribute_grids);
+        float step= sample_step(ray.origin,contribute_grids_bm);
+        auto temp_val = interpolation(ray.origin,contribute_grids_bm);
 //        if (temp_val > 1.0f) cout << temp_val << endl;
 //        sample(grid->tree(), grid->worldToIndex(temp_pos), temp_val);
         auto opacity = opacity_correction(step, opacity_transfer(temp_val));

@@ -13,6 +13,8 @@ include_directories(include)
 include_directories(src)
 #include_directories(libs)
 add_subdirectory(libs)
+add_subdirectory(cuda)
+
 set(HEADS
         include/Cell.h
         include/Brick.h
@@ -57,6 +59,8 @@ set(SRC
 #        trash/scene.cpp
         src/ray.cpp)
 
+set (EXTRA_LIBS ${EXTRA_LIBS} gpu)
+
 add_executable(${PROJECT_NAME} ${HEADS} ${SRC})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json stb OpenMP::OpenMP_CXX)
@@ -65,3 +69,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE OpenVDB::openvdb)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 target_link_libraries(${PROJECT_NAME} PRIVATE glad::glad)
+target_link_libraries (${PROJECT_NAME} PRIVATE ${EXTRA_LIBS})

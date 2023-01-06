@@ -206,6 +206,12 @@ float Integrator::sample_step(Vec3f pos, uint32_t grid_idx_bm) const{
     return step;
 }
 
+Vec3f interleaved_sampling(Vec3f dt, Vec3f t0){
+    Sampler sampler;
+    auto rho=sampler.get1D();
+    dt*(rho+ceil((t0+rho*dt)/dt));
+}
+
 Vec3f Integrator::front_to_back(Ray &ray) const {
     auto grid = gridsData.grids[0];
     ray.direction.normalize();

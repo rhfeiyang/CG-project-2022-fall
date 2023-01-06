@@ -5,7 +5,7 @@
 #include <utility>
 #include <cmath>
 
-//#define OMP
+#define OMP
 
 Integrator::Integrator(std::shared_ptr<Camera> cam,
                        std::shared_ptr<Scene> scene, int spp, Grids_data &gridsData, float iso_value,
@@ -66,109 +66,95 @@ float Integrator::opacity_correction(float step, float opacity) {
 Vec3f Integrator::color_transfer(float val) const {
     int b = (int)round(val * 100);
     return{0.0, (36 - b*b) * 0.4f / 36.0f + 0.6f, b * b * 0.4f / 36.0f + 0.6f};
-    return {0,0.8, 1.0};
+//    return {0,0.8, 1.0};
 }
 
-//template<class ValueT, class TreeT, size_t N>
-//inline int probeValues(ValueT (&data)[N][N][N], const TreeT &inTree, Coord ijk) {
-//    int hasActiveValues = 0;
-//    hasActiveValues += inTree.probeValue(ijk, data[0][0][0]); // i, j, k
-//
-//    ijk[2] += 1;
-//    hasActiveValues += inTree.probeValue(ijk, data[0][0][1]); // i, j, k + 1
-//
-//    ijk[1] += 1;
-//    hasActiveValues += inTree.probeValue(ijk, data[0][1][1]); // i, j+1, k + 1
-//
-//    ijk[2] -= 1;
-//    hasActiveValues += inTree.probeValue(ijk, data[0][1][0]); // i, j+1, k
-//
-//    ijk[0] += 1;
-//    ijk[1] -= 1;
-//    hasActiveValues += inTree.probeValue(ijk, data[1][0][0]); // i+1, j, k
-//
-//    ijk[2] += 1;
-//    hasActiveValues += inTree.probeValue(ijk, data[1][0][1]); // i+1, j, k + 1
-//
-//    ijk[1] += 1;
-//    hasActiveValues += inTree.probeValue(ijk, data[1][1][1]); // i+1, j+1, k + 1
-//
-//    ijk[2] -= 1;
-//    hasActiveValues += inTree.probeValue(ijk, data[1][1][0]); // i+1, j+1, k
-//
-//    return hasActiveValues;
+//inline float Hhat(Vec3R cp, float dx, Vec3f pos) {
+////    return 1;
+//    float H_hat = 1;
+//    for (int i = 0; i < 3; i++) {
+//        H_hat *= std::max(0.0, 1.0 - abs(cp[i] + 0.5 * dx - pos[i]) / dx);
+//    }
+//    return H_hat;
 //}
 
-inline float Hhat(Vec3R cp, float dx, Vec3f pos) {
-//    return 1;
-    float H_hat = 1;
-    for (int i = 0; i < 3; i++) {
-        H_hat *= std::max(0.0, 1.0 - abs(cp[i] + 0.5 * dx - pos[i]) / dx);
-    }
-    return H_hat;
-}
-
 inline float AMR_basis(float dx, const FloatGrid & grid, const Vec3f &pos) {
-//    using ValueT = typename TreeT::ValueType;
     const Vec3i inIdx = openvdb::tools::local_util::floorVec3(grid.worldToIndex(pos));
-//    const Vec3R uvw = inCoord - inIdx;
-    // Retrieve the values of the eight voxels surrounding the
-    // fractional source coordinates.
-    float data[2][2][2];
+    const Vec3f cell_pos = grid.indexToWorld(inIdx);
+//    auto ijk = Coord(inIdx);
     const auto& inTree = grid.tree();
-    auto ijk = Coord(inIdx);
+    float data[2][2][2];
     float sum_weights = 0;
     float sum_weightedValues = 0;
-
-    if (inTree.probeValue(ijk, data[0][0][0])) { // i, j, k
-        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-        sum_weights += H_hat;
-        sum_weightedValues += H_hat * data[0][0][0];
-    }
-    ijk[2] += 1;
-    if (inTree.probeValue(ijk, data[0][0][1])) { // i, j, k + 1
-        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-        sum_weights += H_hat;
-        sum_weightedValues += H_hat * data[0][0][1];
-    }
-    ijk[1] += 1;
-    if (inTree.probeValue(ijk, data[0][1][1])) { // i, j + 1, k + 1
-        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-        sum_weights += H_hat;
-        sum_weightedValues += H_hat * data[0][1][1];
-    }
-    ijk[2] -= 1;
-    if (inTree.probeValue(ijk, data[0][1][0])) { // i, j + 1, k
-        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-        sum_weights += H_hat;
-        sum_weightedValues += H_hat * data[0][1][0];
-    }
-    ijk[0] += 1;
-    ijk[1] -= 1;
-    if (inTree.probeValue(ijk, data[1][0][0])) { // i + 1, j, k
-        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-        sum_weights += H_hat;
-        sum_weightedValues += H_hat * data[1][0][0];
-    }
-    ijk[2] += 1;
-    if (inTree.probeValue(ijk, data[1][0][1])) { // i + 1, j, k + 1
-        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-        sum_weights += H_hat;
-        sum_weightedValues += H_hat * data[1][0][1];
-    }
-    ijk[1] += 1;
-    if (inTree.probeValue(ijk, data[1][1][1])) { // i + 1, j + 1, k + 1
-        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-        sum_weights += H_hat;
-        sum_weightedValues += H_hat * data[1][1][1];
-    }
-    ijk[2] -= 1;
-    if (inTree.probeValue(ijk, data[1][1][0])) { // i + 1, j + 1, k
-        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-        sum_weights += H_hat;
-        sum_weightedValues += H_hat * data[1][1][0];
+    float temp_val;
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            for (int k = 0; k < 2; k++) {
+                // For all 8 points
+                auto ijk = Coord(inIdx + Vec3i(i, j, k));
+                if (inTree.probeValue(ijk, temp_val)) {
+                    auto C_p = cell_pos + dx * Vec3i(i, j, k);
+                    float H_hat = std::max(0.0, 1.0 - abs(C_p[0] + 0.5 * dx - pos[0]) / dx)
+                                * std::max(0.0, 1.0 - abs(C_p[1] + 0.5 * dx - pos[1]) / dx)
+                                * std::max(0.0, 1.0 - abs(C_p[2] + 0.5 * dx - pos[2]) / dx);
+                    sum_weights += H_hat;
+                    sum_weightedValues += H_hat * data[0][0][0];
+                }
+            }
+        }
     }
     return sum_weightedValues / sum_weights;
+
+
+//    if (inTree.probeValue(ijk, data[0][0][0])) { // i, j, k
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[0][0][0];
+//    }
+//    ijk[2] += 1;
+//    if (inTree.probeValue(ijk, data[0][0][1])) { // i, j, k + 1
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[0][0][1];
+//    }
+//    ijk[1] += 1;
+//    if (inTree.probeValue(ijk, data[0][1][1])) { // i, j + 1, k + 1
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[0][1][1];
+//    }
+//    ijk[2] -= 1;
+//    if (inTree.probeValue(ijk, data[0][1][0])) { // i, j + 1, k
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[0][1][0];
+//    }
+//    ijk[0] += 1;
+//    ijk[1] -= 1;
+//    if (inTree.probeValue(ijk, data[1][0][0])) { // i + 1, j, k
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[1][0][0];
+//    }
+//    ijk[2] += 1;
+//    if (inTree.probeValue(ijk, data[1][0][1])) { // i + 1, j, k + 1
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[1][0][1];
+//    }
+//    ijk[1] += 1;
+//    if (inTree.probeValue(ijk, data[1][1][1])) { // i + 1, j + 1, k + 1
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[1][1][1];
+//    }
+//    ijk[2] -= 1;
+//    if (inTree.probeValue(ijk, data[1][1][0])) { // i + 1, j + 1, k
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[1][1][0];
+//    }
+//    return sum_weightedValues / sum_weights;
 }
 
 float Integrator::interpolation(Vec3f pos, const std::vector<int>& grid_idx) const {
@@ -334,4 +320,34 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
 //                                     _interpolate(data[1][1][0], data[1][1][1], uvw[2]),
 //                                     uvw[1]),
 //                        uvw[0]);
+//}
+
+//template<class ValueT, class TreeT, size_t N>
+//inline int probeValues(ValueT (&data)[N][N][N], const TreeT &inTree, Coord ijk) {
+//    int hasActiveValues = 0;
+//    hasActiveValues += inTree.probeValue(ijk, data[0][0][0]); // i, j, k
+//
+//    ijk[2] += 1;
+//    hasActiveValues += inTree.probeValue(ijk, data[0][0][1]); // i, j, k + 1
+//
+//    ijk[1] += 1;
+//    hasActiveValues += inTree.probeValue(ijk, data[0][1][1]); // i, j+1, k + 1
+//
+//    ijk[2] -= 1;
+//    hasActiveValues += inTree.probeValue(ijk, data[0][1][0]); // i, j+1, k
+//
+//    ijk[0] += 1;
+//    ijk[1] -= 1;
+//    hasActiveValues += inTree.probeValue(ijk, data[1][0][0]); // i+1, j, k
+//
+//    ijk[2] += 1;
+//    hasActiveValues += inTree.probeValue(ijk, data[1][0][1]); // i+1, j, k + 1
+//
+//    ijk[1] += 1;
+//    hasActiveValues += inTree.probeValue(ijk, data[1][1][1]); // i+1, j+1, k + 1
+//
+//    ijk[2] -= 1;
+//    hasActiveValues += inTree.probeValue(ijk, data[1][1][0]); // i+1, j+1, k
+//
+//    return hasActiveValues;
 //}

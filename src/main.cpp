@@ -1,7 +1,6 @@
 #include "common.h"
 #include "VDBLoader.h"
 #include "VDBLoader.cpp"
-#include "Construct.h"
 #include "config_io.h"
 #include "integrator.h"
 
@@ -63,12 +62,11 @@ int main(int argc, char *argv[]) {
 
 #ifndef TEST
     // init integrator
-    Kdtree kdtree(loader.grids);
-    auto single_grid=loader.grids.grids[0];
-    auto length=(loader.grids.whole_wbbox.max() - loader.grids.whole_wbbox.min())[loader.grids.whole_wbbox.maxExtent()];
+//    auto single_grid=loader.grids.grids[0];
+//    auto length=(loader.grids.whole_wbbox.max() - loader.grids.whole_wbbox.min())[loader.grids.whole_wbbox.maxExtent()];
 //    auto dim=single_grid->evalActiveVoxelBoundingBox().dim();
     std::unique_ptr<Integrator> integrator
-            = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids,length+5,config.iso_value,config.var);
+            = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids,config.iso_value,config.var);
     std::cout << "Start Rendering..." << std::endl;
     auto start = std::chrono::steady_clock::now();
     // render scene
@@ -78,8 +76,6 @@ int main(int argc, char *argv[]) {
     std::cout << "\nRender Finished in " << time << "s." << std::endl;
     rendered_img->writeImgToFile("../result.png");
     std::cout << "Image saved to disk." << std::endl;
-
-
 
 #else
 //    loader.SortBydx();

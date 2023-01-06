@@ -55,7 +55,7 @@ set(SRC
 #        trash/input.cpp
 #        trash/shader.cpp
 #        trash/scene.cpp
-        )
+        src/ray.cpp)
 
 add_executable(${PROJECT_NAME} ${HEADS} ${SRC})
 

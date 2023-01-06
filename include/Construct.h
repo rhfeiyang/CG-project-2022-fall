@@ -25,7 +25,7 @@ public:
 
     ~KdTreeNode();
 //    bool intersect(Interaction &interaction, const Ray &ray) const;
-    [[nodiscard]] bool isLeaf() const { return !leftChild && !rightChild; }
+    [[nodiscard]] bool isLeaf() const { return leftChild!= nullptr && rightChild!= nullptr; }
 
     static std::vector<wBBox> splitWbbox(const wBBox& bbox, int axis, double pos);
 

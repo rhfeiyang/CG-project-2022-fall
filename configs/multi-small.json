@@ -2,7 +2,7 @@
   "spp": 1,
   "image_resolution" : [800, 300],
   "cam_config" : {
-    "position" : [7,-2,3],
+    "position" : [7,-15,3],
     "look_at": [7,2,3],
     "ref_up" : [0,0,1],
     "vertical_fov": 45,

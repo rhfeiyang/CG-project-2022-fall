@@ -8,10 +8,10 @@
 #define OMP
 
 Integrator::Integrator(std::shared_ptr<Camera> cam,
-                       std::shared_ptr<Scene> scene, int spp, Grids_data &gridsData, float dist_limit, float iso_value,
+                       std::shared_ptr<Scene> scene, int spp, Grids_data &gridsData, float iso_value,
                        float var)
-        : camera(std::move(cam)), scene(std::move(scene)), spp(spp), gridsData(gridsData), dist_limit(dist_limit),
-          variance(var), iso_value(iso_value) {}
+        : camera(std::move(cam)), scene(std::move(scene)), spp(spp), gridsData(gridsData), variance(var), iso_value(iso_value),
+          kdtree(gridsData) {}
 
 void Integrator::render() const {
     auto grid = gridsData.grids[0];
@@ -39,7 +39,7 @@ void Integrator::render() const {
 //            L += front_to_back(ray, grid->metaValue<double>("dx"));
             for (auto i: real_sample_points) {
                 auto ray = camera->generateRay(i.x() + dx, i.y() + dy);
-                L += front_to_back(ray, grid->metaValue<double>("dx"));
+                L += front_to_back(ray);
             }
             L /= spp;
             camera->getImage()->setPixel(dx, dy, L);
@@ -115,14 +115,19 @@ inline ValueT trilinearInterpolation(ValueT (&data)[N][N][N], const Vec3R &uvw) 
                         uvw[0]);
 }
 
-float Integrator::interpolation(Vec3f pos) const {
+float Integrator::interpolation(Vec3f pos, const std::vector<int>& grid_idx) const {
 //    //TODO
 //    pos={0.0,0.0,0.05};
-    auto grid = gridsData.grids[0];
-    FloatGrid::ConstAccessor accessor = grid->getConstAccessor();
+    float result=0;
+    for(auto i:grid_idx){
+        FloatGrid::ConstAccessor accessor = gridsData.grids[i]->getConstAccessor();
 
-    openvdb::tools::GridSampler<FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor,
-                                                                                              grid->transform());
+        openvdb::tools::GridSampler<FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor,
+                                                                                                  gridsData.grids[i]->transform());
+        result+=sampler.wsSample(pos);
+    }
+    result/=float(grid_idx.size());
+    return result;
 //    cout<<pos<<grid->transform().worldToIndex(pos)<<endl;
 //    cout<<grid->getAccessor().getValue({0, 0, 0})<<" "<<
 //        grid->getAccessor().getValue({1, 0, 0})<<" "<<
@@ -135,8 +140,8 @@ float Integrator::interpolation(Vec3f pos) const {
 //    cout<<sampler.wsSample(pos)<<endl;
 //    return sampler.wsSample(pos);
 //    openvdb::tools::GridSampler<FloatGrid , openvdb::tools::BoxSampler> sampler(grid->tree(),grid->transform());
-    auto world_value=sampler.wsSample(pos);
-    return world_value;
+
+
 }
 
 template<class TreeT>
@@ -155,37 +160,49 @@ sample(const TreeT &inTree, const Vec3R &inCoord,
     return hasActiveValues;
 }
 
-///For single-res
-Vec3f Integrator::front_to_back(Ray &ray, float step) const {
+float Integrator::sample_step(const Vec3f &pos, const std::vector<int>& grid_idx) const {
+    float step=std::numeric_limits<float>::max();
+    for(auto i:grid_idx){
+        step= std::min(step, float(gridsData.grids[i]->metaValue<double>("dx")));
+    }
+    return step;
+}
+
+Vec3f Integrator::front_to_back(Ray &ray) const {
     auto grid = gridsData.grids[0];
     ray.direction.normalize();
-    step /= 4;
 //    cout<<ray.direction<<endl;
     Vec3f result{0, 0, 0};
     float T = 1;
-    auto temp_pos = ray.origin;
-    auto limit = dist_limit;
-    while (limit > 0) {
-        temp_pos += ray.direction * step;
-        limit -= step;
-        if (!(gridsData.whole_wbbox.isInside(temp_pos)))
-            continue;
-        float temp_val = 0;
-//        temp_pos = {0.01,0.01,0.01};
-        temp_val = interpolation(temp_pos);
+//    auto temp_pos = ray.origin;
+    std::array<float, 2> t_range{};
+    if(!ray_bbox_range(ray,gridsData.whole_wbbox,t_range))
+        return result;
+    auto limit=t_range[1]-t_range[0]-2*EPS;
+    ray.origin=ray(t_range[0]+EPS);
+
+    while (T>0.05 && limit > 0) {
+//        if (!(gridsData.whole_wbbox.isInside(temp_pos)))
+//            continue;
+        auto contribute_grids=kdtree.grid_contribute(ray.origin);
+        float step= sample_step(ray.origin,contribute_grids);
+        auto temp_val = interpolation(ray.origin,contribute_grids);
 //        if (temp_val > 1.0f) cout << temp_val << endl;
 //        sample(grid->tree(), grid->worldToIndex(temp_pos), temp_val);
         auto opacity = opacity_correction(step, opacity_transfer(temp_val));
-//        if(temp_val>0)
-//            cout<<temp_val<<endl;
+
         result += T * opacity * color_transfer(temp_val);
         T *= (1.0f - opacity);
+        ray.origin=ray(step);
+        limit -= step;
 //        cout<<result<<endl;
     }
 //    cout<<cnt<<endl;
 //    cout<<T<<" "<<limit<<endl;
     return result;
 }
+
+
 
 
 //Some trash files generated during programming

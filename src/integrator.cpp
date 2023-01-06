@@ -55,6 +55,7 @@ float Integrator::opacity_transfer(float value) const {
         return 0.8*exp(-0.5*xu*xu/(0.0025*0.0025));
 //        return (0.005f - abs(value - round(value*100)/100))*160;
     }
+    if (value > 0.75) return 1;
     return 0;
 }
 
@@ -119,14 +120,23 @@ float Integrator::interpolation(Vec3f pos, const std::vector<int>& grid_idx) con
 //    //TODO
 //    pos={0.0,0.0,0.05};
     float result=0;
+    int cnt=0;
     for(auto i:grid_idx){
-        FloatGrid::ConstAccessor accessor = gridsData.grids[i]->getConstAccessor();
+        auto grid=gridsData.grids[i];
+        FloatGrid::ConstAccessor accessor = grid->getConstAccessor();
 
         openvdb::tools::GridSampler<FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor,
-                                                                                                  gridsData.grids[i]->transform());
-        result+=sampler.wsSample(pos);
+                                                                                                  grid->transform());
+//        openvdb::tools::BoxSampler sampler;
+//        sampler.sample(grid->tree(),grid->worldToIndex(pos),);
+        float value=sampler.wsSample(pos);
+//        if(value>1 && value<1e5) cout<<value<<endl;
+        if(value<1) {
+            result += value;
+            cnt++;
+        }
     }
-    result/=float(grid_idx.size());
+    result/=float(cnt);
     return result;
 //    cout<<pos<<grid->transform().worldToIndex(pos)<<endl;
 //    cout<<grid->getAccessor().getValue({0, 0, 0})<<" "<<

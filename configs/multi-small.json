@@ -1,14 +1,14 @@
 {
   "spp": 1,
-  "image_resolution" : [800, 300],
+  "image_resolution" : [800, 400],
   "cam_config" : {
-    "position" : [7,-15,3],
-    "look_at": [7,2,3],
+    "position" : [6.5,-3,3],
+    "look_at": [6.5,2,3],
     "ref_up" : [0,0,1],
     "vertical_fov": 45,
     "focal_length" : 1
   },
-  "file_path": "../resource/multi-res small.vdb",
+  "file_path": "../resource/multi-res big.vdb",
 
   "iso_value": 0.045,
 

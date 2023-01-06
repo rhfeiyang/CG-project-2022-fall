@@ -36,11 +36,12 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename) {
     for (openvdb::io::File::NameIterator nameIter = file->beginName();
          nameIter != file->endName(); ++nameIter) {
         std::string gridName = nameIter.gridName();
+//        std::string gridName ="vel_2";
         openvdb::GridBase::Ptr baseGrid = file->readGrid(gridName);
         gridNames.push_back(gridName + " (" + getGridType(baseGrid) + ")");
 //        grids_base.push_back(baseGrid);
         auto type = baseGrid->type();
-        cout << type << endl;
+        cout << gridName << endl;
         assert(type == GridType::gridType());
         //convert base to grid type
         auto grid = openvdb::gridPtrCast<Vec3sGrid>(baseGrid);
@@ -62,7 +63,7 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename) {
             accessor.setValue(coord, value);
             accessor.setActiveState(coord, ite.isValueOn());
         }
-//        openvdb::tools::changeBackground(floatgrid->tree(), std::numeric_limits<float>::max());
+        openvdb::tools::changeBackground(floatgrid->tree(), std::numeric_limits<float>::max());
 
 //        for(auto ite=floatgrid->beginValueAll();ite;++ite) {
 //            if (!ite.isValueOn()) cout << ite.getValue() << endl;
@@ -74,7 +75,6 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename) {
         }
         floatgrid->setTransform(grid->transformPtr());
         grids.addGrid(floatgrid);
-
 //        for(auto ite=floatgrid->beginValueAll();ite;++ite){
 //            if (!ite.isValueOn() && ite.getValue() > 1) cout << floatgrid->indexToWorld(ite.getCoord()) << "\t" << ite.getValue() << endl;
 //        }

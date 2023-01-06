@@ -7,8 +7,6 @@
 
 class Integrator {
 public:
-//    Integrator(std::shared_ptr<Camera> cam,
-//               std::shared_ptr<Scene> scene, int spp, int max_depth);
     Integrator(std::shared_ptr<Camera> cam,
                std::shared_ptr<Scene> scene, int spp,Grids_data &gridsData, float dist_limit, float iso_value, float var=sqrt(0.0000001));
 

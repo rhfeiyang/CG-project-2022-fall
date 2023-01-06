@@ -8,6 +8,7 @@
 #include <openvdb/tree/NodeManager.h>
 #include <openvdb/version.h>
 #include <openvdb/tools/SignedFloodFill.h>
+#include <openvdb/tools/changeBackground.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>

@@ -1,11 +1,11 @@
 {
   "spp": 1,
-  "image_resolution" : [700, 500],
+  "image_resolution" : [600, 600],
   "cam_config" : {
-    "position" : [7,-2,3],
-    "look_at": [7,2,3],
-    "ref_up" : [0,0,1],
-    "vertical_fov": 90,
+    "position" : [6.5,2,10],
+    "look_at": [6.5,2,3],
+    "ref_up" : [0,1,0],
+    "vertical_fov": 75,
     "focal_length" : 1
   },
   "file_path": "../resource/single-res big.vdb",

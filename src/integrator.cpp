@@ -11,11 +11,12 @@
 //}
 #define OMP
 Integrator::Integrator(std::shared_ptr<Camera> cam,
-                       std::shared_ptr<Scene> scene, int spp, FloatGrid::Ptr &grid, float dist_limit, float iso_value, float var)
-        : camera(std::move(cam)), scene(std::move(scene)), spp(spp), grid(grid), dist_limit(dist_limit), variance(var), iso_value(iso_value) {
+                       std::shared_ptr<Scene> scene, int spp, Grids_data &gridsData, float dist_limit, float iso_value, float var)
+        : camera(std::move(cam)), scene(std::move(scene)), spp(spp), gridsData(gridsData), dist_limit(dist_limit), variance(var), iso_value(iso_value) {
 }
 
 void Integrator::render() const {
+    auto grid=gridsData.grids[0];
   Vec2i resolution = camera->getImage()->getResolution();
   Sampler sampler;
   int cnt = 0;
@@ -99,6 +100,7 @@ Vec3f Integrator::color_transfer(float val) const {
 float Integrator::interpolation(Vec3f pos) const {
     ///TODO
 //    pos={0.0,0.0,0.05};
+    auto grid=gridsData.grids[0];
     FloatGrid::ConstAccessor accessor=grid->getConstAccessor();
 
     openvdb::tools::GridSampler<FloatGrid::ConstAccessor ,openvdb::tools::BoxSampler> sampler(accessor,grid->transform());
@@ -199,6 +201,7 @@ sample(const TreeT& inTree, const Vec3R& inCoord,
 }
 ///For single-res
 Vec3f Integrator::front_to_back(Ray& ray, float step) const {
+    auto grid=gridsData.grids[0];
     ray.direction.normalize();
     step/=4;
 //    cout<<ray.direction<<endl;
@@ -212,16 +215,13 @@ Vec3f Integrator::front_to_back(Ray& ray, float step) const {
         temp_pos += ray.direction*step;
         limit-=step;
 //        cnt++;
-
+        if(!(gridsData.wbbox.isInside(temp_pos)))
+            continue;
         float temp_val=0;
-        openvdb::tools::BoxSampler sampler;
-        float opacity=0;
-        int activeValue= sample(grid->tree(),grid->worldToIndex(temp_pos),temp_val);
-        if(activeValue==8){
-            opacity= opacity_correction(step,opacity_transfer(temp_val));
-        }
+//        openvdb::tools::BoxSampler sampler;
+        sample(grid->tree(),grid->worldToIndex(temp_pos),temp_val);
 
-
+        auto opacity= opacity_correction(step,opacity_transfer(temp_val));
 
 //        if(temp_val>0)
 //            cout<<temp_val<<endl;

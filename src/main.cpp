@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
     auto length=(loader.grids.wbbox.max()-loader.grids.wbbox.min())[loader.grids.wbbox.maxExtent()];
 //    auto dim=single_grid->evalActiveVoxelBoundingBox().dim();
     std::unique_ptr<Integrator> integrator
-            = std::make_unique<Integrator>(camera, scene, config.spp, single_grid,length+5,config.iso_value,config.var);
+            = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids,length+5,config.iso_value,config.var);
     std::cout << "Start Rendering..." << std::endl;
     auto start = std::chrono::steady_clock::now();
     // render scene
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 //    WORLD_ORIGIN=loader.grids[0]->metaValue<double>("origin");
 
     int grid_idx=0;
-    for (auto &grid: loader.grids) {
+    for (auto &grid: loader.grids.grids) {
         //get meta data
         for (auto iter = grid->beginMeta(); iter != grid->endMeta(); ++iter) {
             const std::string &name = iter->first;
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
 //            auto norm = iter->lengthSqr();
             auto coord = iter.getCoord();
             if(abs(value-0.066)>0.002)
-            cout<<grid_idx<<" "<<value<<" "<<iter.getCoord()<<" "<<Grid_world_pos(grid,iter.getCoord())<<endl;
+            cout<<grid_idx<<" "<<value<<" "<<iter.getCoord()<<" "<<grid->indexToWorld(iter.getCoord())<<endl;
 
         }
         grid_idx++;

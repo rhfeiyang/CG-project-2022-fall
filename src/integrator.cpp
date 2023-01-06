@@ -196,6 +196,10 @@ sample(const TreeT& inTree, const Vec3R& inCoord,
 }
 ///For single-res
 Vec3f Integrator::front_to_back(Ray& ray, float step) const {
+    Grids_data G;
+    G.addGrid(grid);
+
+
     ray.direction.normalize();
     step/=4;
 //    cout<<ray.direction<<endl;
@@ -209,16 +213,15 @@ Vec3f Integrator::front_to_back(Ray& ray, float step) const {
         temp_pos += ray.direction*step;
         limit-=step;
 //        cnt++;
+        if(!G.whole_wbbox.isInside(temp_pos))
+            continue;
 
         float temp_val=0;
-        openvdb::tools::BoxSampler sampler;
+//        openvdb::tools::BoxSampler sampler;
         float opacity=0;
         int activeValue= sample(grid->tree(),grid->worldToIndex(temp_pos),temp_val);
-        if(activeValue==8){
-            opacity= opacity_correction(step,opacity_transfer(temp_val));
-        }
 
-
+        opacity= opacity_correction(step,opacity_transfer(temp_val));
 
 //        if(temp_val>0)
 //            cout<<temp_val<<endl;

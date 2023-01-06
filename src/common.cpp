@@ -29,7 +29,17 @@ void Grids_data::addGrid(const FloatGrid::Ptr& grid) {
     dx.push_back(dx_temp);
     if(dx_temp<min_dx) min_dx=dx_temp;
     if(dx_temp>max_dx) max_dx=dx_temp;
-    auto ibbox=grid->evalActiveVoxelBoundingBox();
-    wbbox.expand(grid->indexToWorld(ibbox.min()));
-    wbbox.expand(grid->indexToWorld(ibbox.max()));
+    auto wbbox= ibbTowbb(grid,grid->evalActiveVoxelBoundingBox());
+    whole_wbbox.expand(wbbox);
+    wbboxes.emplace_back(wbbox);
+}
+
+bool floatEqual(const float& first,const float& second){
+    return abs(first-second)<EPS;
+}
+
+wBBox ibbTowbb(const FloatGrid::Ptr & grid,const iBBox& ibb){
+    auto lb=grid->indexToWorld(ibb.min());
+    auto rt=grid->indexToWorld(ibb.max());
+    return {lb,rt};
 }

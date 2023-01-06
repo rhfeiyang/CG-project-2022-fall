@@ -1,8 +1,7 @@
 #include "common.h"
 #include "VDBLoader.h"
 #include "VDBLoader.cpp"
-#include "Cell.h"
-#include "Brick.h"
+#include "Construct.h"
 #include "config_io.h"
 #include "integrator.h"
 
@@ -59,10 +58,13 @@ int main(int argc, char *argv[]) {
 //    initSceneFromConfig(config, scene);
 //load vdb
     VDBLoader<Vec3sGrid> loader(GetFilePath(config.file_path));
+
+//    Kdtree kdtree(loader.grids);
+
 #ifndef TEST
     // init integrator
     auto single_grid=loader.grids.grids[0];
-    auto length=(loader.grids.wbbox.max()-loader.grids.wbbox.min())[loader.grids.wbbox.maxExtent()];
+    auto length=(loader.grids.whole_wbbox.max() - loader.grids.whole_wbbox.min())[loader.grids.whole_wbbox.maxExtent()];
 //    auto dim=single_grid->evalActiveVoxelBoundingBox().dim();
     std::unique_ptr<Integrator> integrator
             = std::make_unique<Integrator>(camera, scene, config.spp, single_grid,length+5,config.iso_value,config.var);

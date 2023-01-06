@@ -15,6 +15,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <openvdb/tools/Interpolation.h>
+#include <openvdb/tools/ChangeBackground.h>
 
 #include <iostream>
 #include <fstream>
@@ -77,7 +78,12 @@ struct Grids_data{
     double max_dx=std::numeric_limits<double>::min();
     double min_dx=std::numeric_limits<double>::max();
 //    Vec3f origin=Vec3f{std::numeric_limits<float>::max(),std::numeric_limits<float>::max(),std::numeric_limits<float>::max()};
-    wBBox wbbox;
+    wBBox whole_wbbox;
+    std::vector<wBBox> wbboxes;
 };
+
+bool floatEqual(const float& first,const float& second);
+wBBox ibbTowbb(const FloatGrid::Ptr & grid,const iBBox& ibb);
+
 //Mat4f Mat4g2v(glm::)
 #endif //CG_PROJECT_2022_FALL_COMMON_H

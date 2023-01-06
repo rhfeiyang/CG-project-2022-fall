@@ -63,19 +63,22 @@ float Integrator::opacity_transfer(float value) const {
 //        return 1;
 //    else
 //    return result;
-    if (0.0666 < value && value < 0.0667) return 0;
-    auto result1=  exp(-pow((value - 0.045), 2) / (2 * 0.01 * 0.01));
-//    auto result2=  exp(-pow((value - 0.03), 2) / (2 * 0.005 * 0.005));
+//    return exp(-pow((value - 0.06), 2) / (2 * 0.0015 * 0.0015));
+
+//    if (0.065 < value && value < 0.068) return 0;
+//    auto result1=  exp(-pow((value - 0.03), 2) / (2 * 0.01 * 0.01));
+//    auto result2=  exp(-pow((value - 0.06), 2) / (2 * 0.002 * 0.002));
 //    return std::max(result1, result2);
 //    auto result3=  exp(-pow((value - 0.04), 2) / (2 * variance * variance));
 //    auto result4=  exp(-pow((value - 0.05), 2) / (2 * variance * variance));
 //    auto result5=  exp(-pow((value - 0.06), 2) / (2 * variance * variance));
 //    return std::max(std::max(result1, result2), std::max(result3, result4));
 //    return std::max(std::max(std::max(result1, result2), std::max(result3, result4)), result5);
-    return  result1;
+//    return  result1;
 //
-//    if(value>0.025&&value<0.065) return 0.9;
+//    if(value>0.01 && value<0.065) return 0.7;
 //    else return 0;
+return 100 * std::max(0.0, (0.005 - abs(value - 0.06)));
 
 }
 

@@ -1,6 +1,6 @@
 {
-  "spp": 5,
-  "image_resolution" : [2560, 2560],
+  "spp": 1,
+  "image_resolution" : [800, 800],
   "cam_config" : {
     "position" : [6.5,-5,3],
     "look_at": [6.5,2,3],
@@ -32,7 +32,7 @@
     "material_name" : "red_diffuse",
     "position": [5,2,3],
     "scale": 1.33333,
-    "has_bvh" : false
+    "has_bvh" : true
   }
     ],
   "file_path": "../resource/multi-res big.vdb",

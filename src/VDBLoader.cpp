@@ -46,10 +46,11 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename) {
         assert(type == GridType::gridType());
         //convert base to grid type
         auto grid = openvdb::gridPtrCast<Vec3sGrid>(baseGrid);
-        FloatGrid::Ptr floatgrid = FloatGrid::create();
+        openvdb::tools::changeBackground(grid->tree(), (Vec3f) 1e30);
+        FloatGrid::Ptr floatgrid = FloatGrid::create(1e30);
         auto accessor = floatgrid->getAccessor();
-//        auto dx = grid->metaValue<double>("dx");
-        auto dx = 0.008;
+        auto dx = grid->metaValue<double>("dx");
+//        auto dx = 0.008;
         auto acc_grid = grid->getAccessor();
         auto max_coord = grid->evalActiveVoxelBoundingBox().max();
         for (auto ite = grid->beginValueOn(); ite; ++ite) {
@@ -94,7 +95,7 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename) {
             accessor.setValue(coord, q);
             accessor.setActiveState(coord, ite.isValueOn());
         }
-        openvdb::tools::changeBackground(floatgrid->tree(), (float) 1e30);
+//        openvdb::tools::changeBackground(floatgrid->tree(), (float) 1e30);
 
 //        for(auto ite=floatgrid->beginValueAll();ite;++ite) {
 //            if (!ite.isValueOn()) cout << ite.getValue() << endl;

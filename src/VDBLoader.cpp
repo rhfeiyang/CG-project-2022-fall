@@ -33,6 +33,9 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename) {
     file->getSize();
     file->open();
     cout << filename << endl;
+    float DX;
+
+
     for (openvdb::io::File::NameIterator nameIter = file->beginName();
          nameIter != file->endName(); ++nameIter) {
         std::string gridName = nameIter.gridName();
@@ -48,22 +51,59 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename) {
 
         FloatGrid::Ptr floatgrid = FloatGrid::create();
         auto accessor = floatgrid->getAccessor();
+        auto dx = grid->metaValue<double>("dx");
+        if (abs(DX-dx) > 1e-4) {
+            DX = dx;
+            cout << DX << endl;
+        }
+//        dx = 0.008;
+        auto acc_grid = grid->getAccessor();
+
         for (auto ite = grid->beginValueAll(); ite; ++ite) {
             auto coord = ite.getCoord();
-//            if (ite.isValueOn()) {
-//                auto value = ite.getValue().length();
-//                accessor.setValue(coord, value);
-//                accessor.setActiveState(coord, true);
-//            }
-//            else {
-//                accessor.setValue(coord, std::numeric_limits<float>::max());
-//                accessor.setActiveState(coord, false);
-//            }
-            auto value = ite.getValue().length();
-            accessor.setValue(coord, value);
+            //auto value = ite.getValue().length();
+            auto max_coord = ite.getBoundingBox().max();
+            Vec3f gx, gy, gz;
+            // grad_x
+            if (coord[0] == 0) {
+                gx = (acc_grid.getValue(Coord(coord.x() + 1, coord.y(), coord.z())) -
+                      acc_grid.getValue(Coord(coord.x(), coord.y(), coord.z()))) / dx;
+            } else if (coord[0] == max_coord[0]) {
+                gx = (acc_grid.getValue(Coord(coord.x(), coord.y(), coord.z())) -
+                      acc_grid.getValue(Coord(coord.x() - 1, coord.y(), coord.z()))) / dx;
+            } else {
+                gx = (acc_grid.getValue(Coord(coord.x() + 1, coord.y(), coord.z())) -
+                      acc_grid.getValue(Coord(coord.x() - 1, coord.y(), coord.z()))) / (2 * dx);
+            }
+            // grad_y
+            if (coord[1] == 0) {
+                gy = (acc_grid.getValue(Coord(coord.x(), coord.y() + 1, coord.z())) -
+                      acc_grid.getValue(Coord(coord.x(), coord.y(), coord.z()))) / dx;
+            } else if (coord[1] == max_coord[1]) {
+                gy = (acc_grid.getValue(Coord(coord.x(), coord.y(), coord.z())) -
+                      acc_grid.getValue(Coord(coord.x(), coord.y() - 1, coord.z()))) / dx;
+            } else {
+                gy = (acc_grid.getValue(Coord(coord.x(), coord.y() + 1, coord.z())) -
+                      acc_grid.getValue(Coord(coord.x(), coord.y() - 1, coord.z()))) / (2 * dx);
+            }
+            // grad_z
+            if (coord[2] == 0) {
+                gz = (acc_grid.getValue(Coord(coord.x(), coord.y(), coord.z() + 1)) -
+                      acc_grid.getValue(Coord(coord.x(), coord.y(), coord.z()))) / dx;
+            } else if (coord[2] == max_coord[2]) {
+                gz = (acc_grid.getValue(Coord(coord.x(), coord.y(), coord.z())) -
+                      acc_grid.getValue(Coord(coord.x(), coord.y(), coord.z() - 1))) / dx;
+            } else {
+                gz = (acc_grid.getValue(Coord(coord.x(), coord.y(), coord.z() + 1)) -
+                      acc_grid.getValue(Coord(coord.x(), coord.y(), coord.z() - 1))) / (2 * dx);
+            }
+
+            float q = -0.5f * (gx.x() * gx.x() + gy.y() * gy.y() + gz.z() * gz.z())
+                    - gx.y() * gy.x() - gx.z() * gz.x() - gy.z() * gz.y();
+            accessor.setValue(coord, q);
             accessor.setActiveState(coord, ite.isValueOn());
         }
-        openvdb::tools::changeBackground(floatgrid->tree(), (float)1e30);
+        openvdb::tools::changeBackground(floatgrid->tree(), (float) 1e30);
 
 //        for(auto ite=floatgrid->beginValueAll();ite;++ite) {
 //            if (!ite.isValueOn()) cout << ite.getValue() << endl;
@@ -79,14 +119,6 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename) {
 //            if (!ite.isValueOn() && ite.getValue() > 1) cout << floatgrid->indexToWorld(ite.getCoord()) << "\t" << ite.getValue() << endl;
 //        }
     }
-
-//    openvdb::io::File floatfile("../testbig.vdb");
-//    floatfile.write(grids.grids);
-//    floatfile.close();
-//    auto grid=openvdb::gridPtrCast<openvdb::Vec3fGrid>(grids[0]);
-//    for(auto ite=grid->beginValueOn();ite;++ite){
-//        cout<<ite.getValue()<<endl;
-//    }
 }
 
 
@@ -105,4 +137,12 @@ VDBLoader<GridType>::~VDBLoader() {
 //    });
 //}
 
-
+//            if (ite.isValueOn()) {
+//                auto value = ite.getValue().length();
+//                accessor.setValue(coord, value);
+//                accessor.setActiveState(coord, true);
+//            }
+//            else {
+//                accessor.setValue(coord, std::numeric_limits<float>::max());
+//                accessor.setActiveState(coord, false);
+//            }

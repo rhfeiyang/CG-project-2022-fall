@@ -51,16 +51,10 @@ void Integrator::render() const {
 float Integrator::opacity_transfer(float value) const {
     //first for isovalue of iso-surface, second for value to be the opacity
     //using Gauss pdf
-
-    // Only turbulence
-    if (0.005 < value && value < 0.065) {
-        float xu = abs(value - 0.035);
-        return 0.9 * exp(-0.5 * xu * xu / (0.005 * 0.005));
-    }
-    // For isosurface: 0.1, 0.2, ..., 0.6
-//    if (0.005 < value && value < 0.065){
-//        float xu = abs(value - round(value*100)/100);
-//        return 0.8 * exp(-0.5*xu*xu/(0.0025*0.0025));
+    if (value > 0.05) return 0.9;
+//    if (0.05 < value && value < 1){
+//        float xu = value - 0.5;
+//        return 0.9 * exp(-0.5*xu*xu/(0.5*0.5));
 //    }
 
 //    if (value > 0.75) return 1;
@@ -72,18 +66,10 @@ float Integrator::opacity_correction(float actual_step, float opacity) {
 }
 
 Vec3f Integrator::color_transfer(float val) {
-
-    // Only turbulence
-    if (0.005 < val && val < 0.065) {
-        return {0.0, 1.0f, 0.7f};
-    }
-
-        // For isosurface: 0.1, 0.2, ..., 0.6
-//    int b = (int)round(val * 100);
-//    if (b <= 6) {
-//        return {0.0, (36 - b * b) * 0.4f / 36.0f + 0.6f, b * b * 0.4f / 36.0f + 0.6f};
-//    }
-    else return {0, 0, 0};
+    float r = std::min(1.0, 1.0 * val * val);
+    float g = std::max(0.0, 2 * val * (1.0 - val));
+    float b = std::max(0.0, (val - 1.0) * (val - 1.0));
+    return {r, g, b};
 }
 
 inline float sample(float dx, const FloatGrid &grid, const Vec3f &pos) {
@@ -154,15 +140,15 @@ float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm) const {
     float result = 0;
     int cnt = 0;
 //    for(auto i:grid_idx){
-    for (int i = 0; grid_idx_bm, i<3; i++, grid_idx_bm >>= 1) {
+    for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
         if (grid_idx_bm & 1) {
             auto grid = gridsData.grids[i];
 //            FloatGrid::ConstAccessor accessor = grid->getConstAccessor();
 //            openvdb::tools::GridSampler
 //            <FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor, grid->transform());
 //            float value=sampler.wsSample(pos);
-            float temp_val = sample((float) gridsData.dx[i], *grid, pos);
-            if(temp_val < 1)
+            float temp_val = sample((float)gridsData.dx[i], *grid, pos);
+            if(temp_val < 100)
                 result = temp_val;
 //            float value = sample((float) gridsData.dx[i], *grid, pos);
 //            if (value < 1) {

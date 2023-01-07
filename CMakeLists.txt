@@ -13,7 +13,7 @@ include_directories(include)
 include_directories(src)
 #include_directories(libs)
 add_subdirectory(libs)
-add_subdirectory(cuda)
+#add_subdirectory(cuda)
 
 set(HEADS
         include/Cell.h
@@ -33,7 +33,7 @@ set(HEADS
         include/ray.h
         include/scene.h
         include/image.h
-        include/utils.h include/config.h include/config_io.h)
+        include/utils.h include/config.h include/config_io.h include/load_obj.h include/geometry.h include/interaction.h include/accel.h)
 set(SRC
         src/main.cpp
         src/Brick.cpp
@@ -57,13 +57,13 @@ set(SRC
 #        trash/input.cpp
 #        trash/shader.cpp
 #        trash/scene.cpp
-        src/ray.cpp)
+        src/ray.cpp src/load_obj.cpp src/geometry.cpp src/accel.cpp)
 
-set (EXTRA_LIBS ${EXTRA_LIBS} gpu)
+#set (EXTRA_LIBS ${EXTRA_LIBS} gpu)
 
 add_executable(${PROJECT_NAME} ${HEADS} ${SRC})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json stb OpenMP::OpenMP_CXX)
+target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json stb OpenMP::OpenMP_CXX tinyobjloader)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenVDB::openvdb)
 
 #target_link_libraries(${PROJECT_NAME} PRIVATE GLUT::GLUT)

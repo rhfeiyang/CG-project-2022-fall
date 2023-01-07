@@ -1,16 +1,16 @@
 #include "scene.h"
-//#include "load_obj.h"
+#include "load_obj.h"
 //
 //#include <utility>
 //#include <iostream>
 //
-//void Scene::addObject(std::shared_ptr<TriangleMesh> &mesh) {
-//  objects.push_back(mesh);
-//}
-//
-//void Scene::setLight(const std::shared_ptr<Light> &new_light) {
-//  light = new_light;
-//}
+void Scene::addObject(std::shared_ptr<TriangleMesh> &mesh) {
+  objects.push_back(mesh);
+}
+
+void Scene::setLight(const std::shared_ptr<Light> &new_light) {
+  light = new_light;
+}
 //bool Scene::isShadowed(Ray &shadow_ray) {
 //  Interaction in;
 //
@@ -28,51 +28,30 @@
 //  return interaction.type != Interaction::Type::NONE;
 //}
 //
-//const std::shared_ptr<Light> &Scene::getLight() const {
-//  return light;
-//}
+const std::shared_ptr<Light> &Scene::getLight() const {
+  return light;
+}
 //
-//void initSceneFromConfig(const Config &config, std::shared_ptr<Scene> &scene) {
+void initSceneFromConfig(const Config &config, std::shared_ptr<Scene> &scene) {
 //  // add square light to scene.
 //  std::shared_ptr<Light> light = std::make_shared<SquareAreaLight>(Vec3f(config.light_config.position),
 //                                                                   Vec3f(config.light_config.radiance),
 //                                                                   Vec2f(config.light_config.size));
 //  scene->setLight(light);
 //  // init all materials.
-//  std::map<std::string, std::shared_ptr<BSDF>> mat_list;
-//  for (const auto &mat: config.materials) {
-//    std::shared_ptr<BSDF> p_mat;
-//    switch (mat.type) {
-//      case MaterialType::DIFFUSE: {
-//        p_mat = std::make_shared<IdealDiffusion>(Vec3f(mat.color));
-//        mat_list[mat.name] = p_mat;
-//        break;
-//      }
-//    case MaterialType::SPECULAR: {
-//        p_mat = std::make_shared<IdealSpecular>(Vec3f(mat.color));
-//        mat_list[mat.name] = p_mat;
-//        break;
-//    }
-//    case MaterialType::Transmission: {
-//        p_mat = std::make_shared<Translucent>(Vec3f(mat.color));
-//        mat_list[mat.name] = p_mat;
-//        break;
-//    }
-//      default: {
-//        std::cerr << "unsupported material type!" << std::endl;
-//        exit(-1);
-//      }
-//    }
-//  }
-//  // add mesh objects to scene. Translation and scaling are directly applied to vertex coordinates.
-//  // then set corresponding material by name.
-//  std::cout << "loading obj files..." << std::endl;
-//  for (auto &object: config.objects) {
-//    auto mesh_obj = makeMeshObject(object.obj_file_path, Vec3f(object.translate), object.scale);
+  std::map<std::string,Vec3f> mat_list;
+  for (const auto &mat: config.materials) {
+        mat_list[mat.name] = Vec3f (mat.color);
+  }
+  // add mesh objects to scene. Translation and scaling are directly applied to vertex coordinates.
+  // then set corresponding material by name.
+  std::cout << "loading obj files..." << std::endl;
+  for (auto &object: config.objects) {
+    auto mesh_obj = makeMeshObject(object.path, Vec3f(object.position),object.scale);
 //    mesh_obj->setMaterial(mat_list[object.material_name]);
-//    if (object.has_bvh) {
-//      mesh_obj->buildBVH();
-//    }
-//    scene->addObject(mesh_obj);
-//  }
-//}
+      if (object.has_bvh) {
+          mesh_obj->buildBVH();
+      }
+    scene->addObject(mesh_obj);
+  }
+}

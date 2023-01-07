@@ -51,7 +51,11 @@ void Integrator::render() const {
 float Integrator::opacity_transfer(float value) const {
     //first for isovalue of iso-surface, second for value to be the opacity
     //using Gauss pdf
-    if (value > 0.05) return 0.9;
+    if (value > 0.2) {
+        return 0.6;
+//        float xu = value - 1.0;
+//        return 0.9 * exp(-0.5*xu*xu/(1.0*1.0));
+    }
 //    if (0.05 < value && value < 1){
 //        float xu = value - 0.5;
 //        return 0.9 * exp(-0.5*xu*xu/(0.5*0.5));
@@ -66,9 +70,9 @@ float Integrator::opacity_correction(float actual_step, float opacity) {
 }
 
 Vec3f Integrator::color_transfer(float val) {
-    float r = std::min(1.0, 1.0 * val * val);
-    float g = std::max(0.0, 2 * val * (1.0 - val));
-    float b = std::max(0.0, (val - 1.0) * (val - 1.0));
+    float r = std::min(1.0, std::sqrt(val * val / 4.0));
+    float g = std::max(0.0, std::sqrt(2 * val * (2.0 - val) / 4.0));
+    float b = std::max(0.0, std::sqrt((val - 2.0) * (val - 2.0) / 4.0));
     return {r, g, b};
 }
 
@@ -146,7 +150,7 @@ float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm) const {
 //            FloatGrid::ConstAccessor accessor = grid->getConstAccessor();
 //            openvdb::tools::GridSampler
 //            <FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor, grid->transform());
-//            float value=sampler.wsSample(pos);
+//            float temp_val=sampler.wsSample(pos);
             float temp_val = sample((float)gridsData.dx[i], *grid, pos);
             if(temp_val < 100)
                 result = temp_val;

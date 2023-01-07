@@ -33,8 +33,6 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename) {
     file->getSize();
     file->open();
     cout << filename << endl;
-    float DX;
-
 
     for (openvdb::io::File::NameIterator nameIter = file->beginName();
          nameIter != file->endName(); ++nameIter) {
@@ -48,21 +46,15 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename) {
         assert(type == GridType::gridType());
         //convert base to grid type
         auto grid = openvdb::gridPtrCast<Vec3sGrid>(baseGrid);
-
         FloatGrid::Ptr floatgrid = FloatGrid::create();
         auto accessor = floatgrid->getAccessor();
-        auto dx = grid->metaValue<double>("dx");
-        if (abs(DX-dx) > 1e-4) {
-            DX = dx;
-            cout << DX << endl;
-        }
-//        dx = 0.008;
+//        auto dx = grid->metaValue<double>("dx");
+        auto dx = 0.008;
         auto acc_grid = grid->getAccessor();
-
-        for (auto ite = grid->beginValueAll(); ite; ++ite) {
+        auto max_coord = grid->evalActiveVoxelBoundingBox().max();
+        for (auto ite = grid->beginValueOn(); ite; ++ite) {
             auto coord = ite.getCoord();
             //auto value = ite.getValue().length();
-            auto max_coord = ite.getBoundingBox().max();
             Vec3f gx, gy, gz;
             // grad_x
             if (coord[0] == 0) {
@@ -97,7 +89,6 @@ VDBLoader<GridType>::VDBLoader(std::string filename) : filename(filename) {
                 gz = (acc_grid.getValue(Coord(coord.x(), coord.y(), coord.z() + 1)) -
                       acc_grid.getValue(Coord(coord.x(), coord.y(), coord.z() - 1))) / (2 * dx);
             }
-
             float q = -0.5f * (gx.x() * gx.x() + gy.y() * gy.y() + gz.z() * gz.z())
                     - gx.y() * gy.x() - gx.z() * gz.x() - gy.z() * gz.y();
             accessor.setValue(coord, q);

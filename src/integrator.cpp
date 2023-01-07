@@ -55,7 +55,7 @@ float Integrator::opacity_transfer(float value) const {
     // Only turbulence
     if (0.005 < value && value < 0.065) {
         float xu = abs(value - 0.035);
-        return 0.9 * exp(-0.5 * xu * xu / (0.007 * 0.007));
+        return 0.9 * exp(-0.5 * xu * xu / (0.005 * 0.005));
     }
     // For isosurface: 0.1, 0.2, ..., 0.6
 //    if (0.005 < value && value < 0.065){
@@ -154,35 +154,25 @@ float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm) const {
     float result = 0;
     int cnt = 0;
 //    for(auto i:grid_idx){
-    for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
+    for (int i = 0; grid_idx_bm, i<3; i++, grid_idx_bm >>= 1) {
         if (grid_idx_bm & 1) {
             auto grid = gridsData.grids[i];
 //            FloatGrid::ConstAccessor accessor = grid->getConstAccessor();
 //            openvdb::tools::GridSampler
 //            <FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor, grid->transform());
 //            float value=sampler.wsSample(pos);
-            float value = sample((float) gridsData.dx[i], *grid, pos);
-            if (value < 1) {
-                result += value;
-                cnt++;
-            }
+            float temp_val = sample((float) gridsData.dx[i], *grid, pos);
+            if(temp_val < 1)
+                result = temp_val;
+//            float value = sample((float) gridsData.dx[i], *grid, pos);
+//            if (value < 1) {
+//                result += value;
+//                cnt++;
+//            }
         }
     }
-//    cout << "NB";
-    result /= float(cnt);
+//    result /= float(cnt);
     return result;
-//    cout<<pos<<grid->transform().worldToIndex(pos)<<endl;
-//    cout<<grid->getAccessor().getValue({0, 0, 0})<<" "<<
-//        grid->getAccessor().getValue({1, 0, 0})<<" "<<
-//        grid->getAccessor().getValue({0, 1, 0})<<" "<<
-//        grid->getAccessor().getValue({0, 0, 1})<<" "<<
-//        grid->getAccessor().getValue({1, 1, 0})<<" "<<
-//        grid->getAccessor().getValue({1, 0, 1})<<" "<<
-//        grid->getAccessor().getValue({0, 1, 1})<<" "<<
-//        grid->getAccessor().getValue({1, 1, 1})<<endl;
-//    cout<<sampler.wsSample(pos)<<endl;
-//    return sampler.wsSample(pos);
-//    openvdb::tools::GridSampler<FloatGrid , openvdb::tools::BoxSampler> sampler(grid->tree(),grid->transform());
 }
 
 float Integrator::step_Base(Vec3f pos, uint32_t grid_idx_bm) const {
@@ -421,3 +411,17 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
 //    }
 //    return H_hat;
 //}
+
+// From sample
+//    cout<<pos<<grid->transform().worldToIndex(pos)<<endl;
+//    cout<<grid->getAccessor().getValue({0, 0, 0})<<" "<<
+//        grid->getAccessor().getValue({1, 0, 0})<<" "<<
+//        grid->getAccessor().getValue({0, 1, 0})<<" "<<
+//        grid->getAccessor().getValue({0, 0, 1})<<" "<<
+//        grid->getAccessor().getValue({1, 1, 0})<<" "<<
+//        grid->getAccessor().getValue({1, 0, 1})<<" "<<
+//        grid->getAccessor().getValue({0, 1, 1})<<" "<<
+//        grid->getAccessor().getValue({1, 1, 1})<<endl;
+//    cout<<sampler.wsSample(pos)<<endl;
+//    return sampler.wsSample(pos);
+//    openvdb::tools::GridSampler<FloatGrid , openvdb::tools::BoxSampler> sampler(grid->tree(),grid->transform());

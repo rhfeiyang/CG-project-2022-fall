@@ -1,8 +1,8 @@
 {
-  "spp": 2,
-  "image_resolution" : [500, 500],
+  "spp": 1,
+  "image_resolution" : [1200, 1200],
   "cam_config" : {
-    "position" : [6.5,-8,3],
+    "position" : [6.5,-5,3],
     "look_at": [6.5,2,3],
     "ref_up" : [0,0,1],
     "vertical_fov": 45,
@@ -13,5 +13,5 @@
   "iso_value": 0.045,
 
   "var": 0.0007,
-  "step_scale": 0.25
+  "step_scale": 0.5
 }

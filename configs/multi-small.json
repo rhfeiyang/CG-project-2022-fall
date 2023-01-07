@@ -1,6 +1,6 @@
 {
-  "spp": 1,
-  "image_resolution" : [800, 800],
+  "spp": 2,
+  "image_resolution" : [500, 500],
   "cam_config" : {
     "position" : [6.5,-8,3],
     "look_at": [6.5,2,3],
@@ -8,10 +8,10 @@
     "vertical_fov": 45,
     "focal_length" : 1
   },
-  "file_path": "../resource/multi-es big.vdb",
+  "file_path": "../resource/multi-res big.vdb",
 
   "iso_value": 0.045,
 
   "var": 0.0007,
-  "step_scale": 1
+  "step_scale": 0.25
 }

@@ -50,35 +50,37 @@ void Integrator::render() const {
 float Integrator::opacity_transfer(float value) const {
     //first for isovalue of iso-surface, second for value to be the opacity
     //using Gauss pdf
-    if (value < 0.065){
-        float xu = 0.005f - abs(value - round(value*100)/100);
-        return 0.8*exp(-0.5*xu*xu/(0.0025*0.0025));
-//        return (0.005f - abs(value - round(value*100)/100))*160;
+
+    // Only turbulence
+    if (0.03 < value && value < 0.04) {
+        return 0.9f;
     }
-    if (value > 0.75) return 1;
+    // For isosurface: 0.1, 0.2, ..., 0.6
+//    if (0.005 < value && value < 0.065){
+//        float xu = abs(value - round(value*100)/100);
+//        return 0.8 * exp(-0.5*xu*xu/(0.0025*0.0025));
+//    }
+
+//    if (value > 0.75) return 1;
     return 0;
 }
 
-float Integrator::opacity_correction(float actual_step, float step_base, float opacity) {
-    return 1 - pow((1 - opacity), actual_step/step_base);
+float Integrator::opacity_correction(float actual_step, float opacity) {
+    return 1 - pow((1 - opacity), actual_step);
 }
 
 Vec3f Integrator::color_transfer(float val) {
     int b = (int)round(val * 100);
-    return{0.0, (36 - b*b) * 0.4f / 36.0f + 0.6f, b * b * 0.4f / 36.0f + 0.6f};
-//    return {0,0.8, 1.0};
+    if (b <= 6) {
+        // Only turbulence
+//        return {0.0, 1.0f, 0.7f};
+        // For isosurface: 0.1, 0.2, ..., 0.6
+        return {0.0, (36 - b * b) * 0.4f / 36.0f + 0.6f, b * b * 0.4f / 36.0f + 0.6f};
+    }
+    else return {0,0,0};
 }
 
-//inline float Hhat(Vec3R cp, float dx, Vec3f pos) {
-////    return 1;
-//    float H_hat = 1;
-//    for (int i = 0; i < 3; i++) {
-//        H_hat *= std::max(0.0, 1.0 - abs(cp[i] + 0.5 * dx - pos[i]) / dx);
-//    }
-//    return H_hat;
-//}
-
-inline float AMR_basis(float dx, const FloatGrid & grid, const Vec3f &pos) {
+inline float sample(float dx, const FloatGrid & grid, const Vec3f &pos) {
     const Vec3i inIdx = floorVec3(grid.worldToIndex(pos));
     const Vec3f cell_pos = grid.indexToWorld(inIdx);
 //    auto ijk = Coord(inIdx);
@@ -104,57 +106,6 @@ inline float AMR_basis(float dx, const FloatGrid & grid, const Vec3f &pos) {
         }
     }
     return sum_weightedValues / sum_weights;
-
-
-//    if (inTree.probeValue(ijk, data[0][0][0])) { // i, j, k
-//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-//        sum_weights += H_hat;
-//        sum_weightedValues += H_hat * data[0][0][0];
-//    }
-//    ijk[2] += 1;
-//    if (inTree.probeValue(ijk, data[0][0][1])) { // i, j, k + 1
-//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-//        sum_weights += H_hat;
-//        sum_weightedValues += H_hat * data[0][0][1];
-//    }
-//    ijk[1] += 1;
-//    if (inTree.probeValue(ijk, data[0][1][1])) { // i, j + 1, k + 1
-//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-//        sum_weights += H_hat;
-//        sum_weightedValues += H_hat * data[0][1][1];
-//    }
-//    ijk[2] -= 1;
-//    if (inTree.probeValue(ijk, data[0][1][0])) { // i, j + 1, k
-//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-//        sum_weights += H_hat;
-//        sum_weightedValues += H_hat * data[0][1][0];
-//    }
-//    ijk[0] += 1;
-//    ijk[1] -= 1;
-//    if (inTree.probeValue(ijk, data[1][0][0])) { // i + 1, j, k
-//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-//        sum_weights += H_hat;
-//        sum_weightedValues += H_hat * data[1][0][0];
-//    }
-//    ijk[2] += 1;
-//    if (inTree.probeValue(ijk, data[1][0][1])) { // i + 1, j, k + 1
-//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-//        sum_weights += H_hat;
-//        sum_weightedValues += H_hat * data[1][0][1];
-//    }
-//    ijk[1] += 1;
-//    if (inTree.probeValue(ijk, data[1][1][1])) { // i + 1, j + 1, k + 1
-//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-//        sum_weights += H_hat;
-//        sum_weightedValues += H_hat * data[1][1][1];
-//    }
-//    ijk[2] -= 1;
-//    if (inTree.probeValue(ijk, data[1][1][0])) { // i + 1, j + 1, k
-//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
-//        sum_weights += H_hat;
-//        sum_weightedValues += H_hat * data[1][1][0];
-//    }
-//    return sum_weightedValues / sum_weights;
 }
 
 float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm) const {
@@ -169,7 +120,7 @@ float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm) const {
 //            openvdb::tools::GridSampler
 //            <FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor, grid->transform());
 //            float value=sampler.wsSample(pos);
-            float value = AMR_basis((float) gridsData.dx[i], *grid, pos);
+            float value = sample((float) gridsData.dx[i], *grid, pos);
             if (value < 1) {
                 result += value;
                 cnt++;
@@ -191,8 +142,6 @@ float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm) const {
 //    cout<<sampler.wsSample(pos)<<endl;
 //    return sampler.wsSample(pos);
 //    openvdb::tools::GridSampler<FloatGrid , openvdb::tools::BoxSampler> sampler(grid->tree(),grid->transform());
-
-
 }
 
 float Integrator::step_Base(Vec3f pos, uint32_t grid_idx_bm) const{
@@ -236,7 +185,7 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
         auto sample_pos=(ray.origin+next_pos)/2;
 
         auto temp_val = interpolation(sample_pos,contribute_grids_bm);
-        auto opacity = opacity_correction(actual_step,step_base , opacity_transfer(temp_val));
+        auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val));
 
         result += T * opacity * color_transfer(temp_val);
         T *= (1.0f - opacity);
@@ -369,4 +318,65 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
 //    hasActiveValues += inTree.probeValue(ijk, data[1][1][0]); // i+1, j+1, k
 //
 //    return hasActiveValues;
+//}
+
+
+// From AMR_basis
+//    if (inTree.probeValue(ijk, data[0][0][0])) { // i, j, k
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[0][0][0];
+//    }
+//    ijk[2] += 1;
+//    if (inTree.probeValue(ijk, data[0][0][1])) { // i, j, k + 1
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[0][0][1];
+//    }
+//    ijk[1] += 1;
+//    if (inTree.probeValue(ijk, data[0][1][1])) { // i, j + 1, k + 1
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[0][1][1];
+//    }
+//    ijk[2] -= 1;
+//    if (inTree.probeValue(ijk, data[0][1][0])) { // i, j + 1, k
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[0][1][0];
+//    }
+//    ijk[0] += 1;
+//    ijk[1] -= 1;
+//    if (inTree.probeValue(ijk, data[1][0][0])) { // i + 1, j, k
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[1][0][0];
+//    }
+//    ijk[2] += 1;
+//    if (inTree.probeValue(ijk, data[1][0][1])) { // i + 1, j, k + 1
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[1][0][1];
+//    }
+//    ijk[1] += 1;
+//    if (inTree.probeValue(ijk, data[1][1][1])) { // i + 1, j + 1, k + 1
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[1][1][1];
+//    }
+//    ijk[2] -= 1;
+//    if (inTree.probeValue(ijk, data[1][1][0])) { // i + 1, j + 1, k
+//        float H_hat = Hhat(grid.indexToWorld(ijk), dx, pos);
+//        sum_weights += H_hat;
+//        sum_weightedValues += H_hat * data[1][1][0];
+//    }
+//    return sum_weightedValues / sum_weights;
+
+//inline float Hhat(Vec3R cp, float dx, Vec3f pos) {
+////    return 1;
+//    float H_hat = 1;
+//    for (int i = 0; i < 3; i++) {
+//        H_hat *= std::max(0.0, 1.0 - abs(cp[i] + 0.5 * dx - pos[i]) / dx);
+//    }
+//    return H_hat;
 //}

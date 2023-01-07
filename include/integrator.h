@@ -19,7 +19,7 @@ public:
 
     [[nodiscard]] float interpolation(Vec3f pos, uint32_t grid_idx_bm) const;
 
-    static float opacity_correction(float actual_step, float step_base, float opacity);
+    static float opacity_correction(float actual_step, float opacity);
 
     Vec3f front_to_back(Ray &ray) const;
 

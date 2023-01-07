@@ -23,5 +23,5 @@ file(GLOB CURRENT_SOURCES  *.cpp *.cu)
 source_group("Include" FILES ${CURRENT_HEADERS})
 source_group("Source" FILES ${CURRENT_SOURCES})
 
-cuda_add_library(gpu SHARED ${CURRENT_HEADERS} ${CURRENT_SOURCES})
+cuda_add_library(gpu SHARED ${CURRENT_HEADERS} ${CURRENT_SOURCES} )
 #cuda_add_library(gpu STATIC ${CURRENT_HEADERS} ${CURRENT_SOURCES})

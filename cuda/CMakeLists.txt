@@ -9,7 +9,7 @@ cmake_minimum_required(VERSION 3.22)
 # packages
 find_package(CUDA REQUIRED)
 
-#include_directories ("${PROJECT_SOURCE_DIR}")
+include_directories ("${PROJECT_SOURCE_DIR}")
 
 # nvcc flags -g for debug
 #set(CUDA_NVCC_FLAGS -O3;-G;-g)
@@ -23,5 +23,5 @@ file(GLOB CURRENT_SOURCES  *.cpp *.cu)
 source_group("Include" FILES ${CURRENT_HEADERS})
 source_group("Source" FILES ${CURRENT_SOURCES})
 
-#cuda_add_library(gpu SHARED ${CURRENT_HEADERS} ${CURRENT_SOURCES})
-cuda_add_library(gpu STATIC ${CURRENT_HEADERS} ${CURRENT_SOURCES})
+cuda_add_library(gpu SHARED ${CURRENT_HEADERS} ${CURRENT_SOURCES})
+#cuda_add_library(gpu STATIC ${CURRENT_HEADERS} ${CURRENT_SOURCES})

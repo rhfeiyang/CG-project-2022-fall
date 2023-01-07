@@ -10,7 +10,8 @@
 Integrator::Integrator(std::shared_ptr<Camera> cam,
                        std::shared_ptr<Scene> scene, int spp, Grids_data &gridsData, float iso_value,
                        float var, float step_scale)
-        : camera(std::move(cam)), scene(std::move(scene)), spp(spp), gridsData(gridsData), variance(var), iso_value(iso_value),
+        : camera(std::move(cam)), scene(std::move(scene)), spp(spp), gridsData(gridsData), variance(var),
+          iso_value(iso_value),
           kdtree(gridsData), step_scale(step_scale) {}
 
 void Integrator::render() const {
@@ -52,8 +53,9 @@ float Integrator::opacity_transfer(float value) const {
     //using Gauss pdf
 
     // Only turbulence
-    if (0.03 < value && value < 0.04) {
-        return 0.9f;
+    if (0.005 < value && value < 0.065) {
+        float xu = abs(value - 0.035);
+        return 0.9 * exp(-0.5 * xu * xu / (0.007 * 0.007));
     }
     // For isosurface: 0.1, 0.2, ..., 0.6
 //    if (0.005 < value && value < 0.065){
@@ -70,22 +72,25 @@ float Integrator::opacity_correction(float actual_step, float opacity) {
 }
 
 Vec3f Integrator::color_transfer(float val) {
-    int b = (int)round(val * 100);
-    if (b <= 6) {
-        // Only turbulence
-//        return {0.0, 1.0f, 0.7f};
-        // For isosurface: 0.1, 0.2, ..., 0.6
-        return {0.0, (36 - b * b) * 0.4f / 36.0f + 0.6f, b * b * 0.4f / 36.0f + 0.6f};
+
+    // Only turbulence
+    if (0.005 < val && val < 0.065) {
+        return {0.0, 1.0f, 0.7f};
     }
-    else return {0,0,0};
+
+        // For isosurface: 0.1, 0.2, ..., 0.6
+//    int b = (int)round(val * 100);
+//    if (b <= 6) {
+//        return {0.0, (36 - b * b) * 0.4f / 36.0f + 0.6f, b * b * 0.4f / 36.0f + 0.6f};
+//    }
+    else return {0, 0, 0};
 }
 
-inline float sample(float dx, const FloatGrid & grid, const Vec3f &pos) {
+inline float sample(float dx, const FloatGrid &grid, const Vec3f &pos) {
     const Vec3i inIdx = floorVec3(grid.worldToIndex(pos));
     const Vec3f cell_pos = grid.indexToWorld(inIdx);
 //    auto ijk = Coord(inIdx);
-    const auto& inTree = grid.tree();
-    float data[2][2][2];
+    const auto &inTree = grid.tree();
     float sum_weights = 0;
     float sum_weightedValues = 0;
     float temp_val;
@@ -96,11 +101,11 @@ inline float sample(float dx, const FloatGrid & grid, const Vec3f &pos) {
                 auto ijk = Coord(inIdx + Vec3i(i, j, k));
                 if (inTree.probeValue(ijk, temp_val)) {
                     auto C_p = cell_pos + dx * Vec3i(i, j, k);
-                    float H_hat = std::max(0.0, 1.0 - abs(C_p[0] + 0.5 * dx - pos[0]) / dx)
-                                * std::max(0.0, 1.0 - abs(C_p[1] + 0.5 * dx - pos[1]) / dx)
-                                * std::max(0.0, 1.0 - abs(C_p[2] + 0.5 * dx - pos[2]) / dx);
+                    float H_hat = std::max(0.0, 1.0 - abs(C_p[0] - pos[0]) / dx)
+                                  * std::max(0.0, 1.0 - abs(C_p[1] - pos[1]) / dx)
+                                  * std::max(0.0, 1.0 - abs(C_p[2] - pos[2]) / dx);
                     sum_weights += H_hat;
-                    sum_weightedValues += H_hat * data[0][0][0];
+                    sum_weightedValues += H_hat * temp_val;
                 }
             }
         }
@@ -108,10 +113,46 @@ inline float sample(float dx, const FloatGrid & grid, const Vec3f &pos) {
     return sum_weightedValues / sum_weights;
 }
 
+inline Vec3f gradient(float dx, const FloatGrid &grid, const Vec3f &pos) {
+    const Vec3i inIdx = floorVec3(grid.worldToIndex(pos));
+    const Vec3f cell_pos = grid.indexToWorld(inIdx);
+    const auto &inTree = grid.tree();
+    float temp_val;
+    Vec3f grad(0,0,0);
+    for (int axis = 0; axis < 3; axis++) {
+        // For gradient on each direction (dx, dy, dz)
+        float sum_weights = 0;
+        float sum_weightedValues = 0;
+        float sum_dH_dxyz = 0;
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                for (int k = 0; k < 2; k++) {
+                    // For all 8 points
+                    auto ijk = Coord(inIdx + Vec3i(i, j, k));
+                    if (inTree.probeValue(ijk, temp_val)) {
+                        auto C_p = cell_pos + dx * Vec3i(i, j, k);
+                        float h[3] = {(float) std::max(0.0, 1.0 - abs(C_p[0] - pos[0]) / dx),
+                                      (float) std::max(0.0, 1.0 - abs(C_p[1] - pos[1]) / dx),
+                                      (float) std::max(0.0, 1.0 - abs(C_p[2] - pos[2]) / dx)};
+                        float H_hat = h[0] * h[1] * h[2];
+                        sum_weights += H_hat;
+                        sum_weightedValues += H_hat * temp_val;
+                        float X_t = C_p[axis] < pos[axis] ? 1 : -1;
+                        sum_dH_dxyz += H_hat / h[axis] * X_t / dx;
+                    }
+                }
+            }
+        }
+        grad[axis] = (sum_weights - sum_weightedValues) * sum_dH_dxyz / (sum_weights * sum_weights);
+    }
+    return grad;
+}
+
+
 float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm) const {
 //    //TODO
-    float result=0;
-    int cnt=0;
+    float result = 0;
+    int cnt = 0;
 //    for(auto i:grid_idx){
     for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
         if (grid_idx_bm & 1) {
@@ -128,7 +169,7 @@ float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm) const {
         }
     }
 //    cout << "NB";
-    result/=float(cnt);
+    result /= float(cnt);
     return result;
 //    cout<<pos<<grid->transform().worldToIndex(pos)<<endl;
 //    cout<<grid->getAccessor().getValue({0, 0, 0})<<" "<<
@@ -144,8 +185,8 @@ float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm) const {
 //    openvdb::tools::GridSampler<FloatGrid , openvdb::tools::BoxSampler> sampler(grid->tree(),grid->transform());
 }
 
-float Integrator::step_Base(Vec3f pos, uint32_t grid_idx_bm) const{
-    float step=std::numeric_limits<float>::max();
+float Integrator::step_Base(Vec3f pos, uint32_t grid_idx_bm) const {
+    float step = std::numeric_limits<float>::max();
 //    for(auto i:grid_idx){
     for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
         if (grid_idx_bm & 1) {
@@ -155,10 +196,10 @@ float Integrator::step_Base(Vec3f pos, uint32_t grid_idx_bm) const{
     return step;
 }
 
-Vec3f interleaved_sampling(Vec3f dt, Vec3f t0){
+Vec3f interleaved_sampling(Vec3f dt, Vec3f t0) {
     Sampler sampler;
-    auto rho=sampler.get1D();
-    return dt*(Vec3f(rho)+ceilVec3((t0+rho*dt)/dt));
+    auto rho = sampler.get1D();
+    return dt * (Vec3f(rho) + ceilVec3((t0 + rho * dt) / dt));
 }
 
 
@@ -170,32 +211,32 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     float T = 1;
 //    auto temp_pos = ray.origin;
     std::array<float, 2> t_range{};
-    if(!ray_bbox_range(ray,gridsData.whole_wbbox,t_range))
+    if (!ray_bbox_range(ray, gridsData.whole_wbbox, t_range))
         return result;
-    auto limit=t_range[1]-t_range[0];
-    ray.origin=ray(t_range[0]+EPS);
-    auto contribute_grids_bm=kdtree.grid_contribute(ray.origin);
-    float step_base= step_Base(ray.origin,contribute_grids_bm);
-    auto actual_step=step_base*step_scale;
-    ray.origin=interleaved_sampling(actual_step*ray.direction,ray.origin)-EPS;
+    auto limit = t_range[1] - t_range[0];
+    ray.origin = ray(t_range[0] + EPS);
+    auto contribute_grids_bm = kdtree.grid_contribute(ray.origin);
+    float step_base = step_Base(ray.origin, contribute_grids_bm);
+    auto actual_step = step_base * step_scale;
+    ray.origin = interleaved_sampling(actual_step * ray.direction, ray.origin) - EPS;
 
 
-    while (T>0.05 && limit > 0) {
-        auto next_pos=ray(actual_step);
-        auto sample_pos=(ray.origin+next_pos)/2;
+    while (T > 0.05 && limit > 0) {
+        auto next_pos = ray(actual_step);
+        auto sample_pos = (ray.origin + next_pos) / 2;
 
-        auto temp_val = interpolation(sample_pos,contribute_grids_bm);
+        auto temp_val = interpolation(sample_pos, contribute_grids_bm);
         auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val));
 
         result += T * opacity * color_transfer(temp_val);
         T *= (1.0f - opacity);
 
-        ray.origin=next_pos;
+        ray.origin = next_pos;
         limit -= actual_step;
 
-        contribute_grids_bm=kdtree.grid_contribute(ray.origin);
-        step_base= step_Base(ray.origin, contribute_grids_bm);
-        actual_step=step_base*step_scale;
+        contribute_grids_bm = kdtree.grid_contribute(ray.origin);
+        step_base = step_Base(ray.origin, contribute_grids_bm);
+        actual_step = step_base * step_scale;
 //        cout<<result<<endl;
     }
 
@@ -232,8 +273,8 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
 //}
 
 //float Integrator::opacity_transfer(float value) const {
-    //first for isovalue of iso-surface, second for value to be the opacity
-    //using Gauss pdf
+//first for isovalue of iso-surface, second for value to be the opacity
+//using Gauss pdf
 //    auto result= 1 / (variance * sqrt(2 * PI)) * exp(-pow((value - isovalue), 2) / (2 * variance * variance));
 //    if(abs(value-iso_value)>0.001) return 0;
 //    if(value>=0.065 ) return 0;

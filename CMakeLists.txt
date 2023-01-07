@@ -65,6 +65,7 @@ add_executable(${PROJECT_NAME} ${HEADS} ${SRC})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json stb OpenMP::OpenMP_CXX)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenVDB::openvdb)
+
 #target_link_libraries(${PROJECT_NAME} PRIVATE GLUT::GLUT)
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)

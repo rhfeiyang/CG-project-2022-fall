@@ -6,7 +6,15 @@
 #include "ray.h"
 #include "image.h"
 #include "config.h"
-
+enum class Camera_Movement
+{
+    FORWARD,
+    BACKWARD,
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN,
+};
 class Camera {
  public:
   Camera();
@@ -21,6 +29,34 @@ class Camera {
   [[nodiscard]] float getFov() const;
   void setImage(std::shared_ptr<ImageRGB> &img);
   [[nodiscard]] std::shared_ptr<ImageRGB> &getImage();
+    void ProcessKeyboard(Camera_Movement direction, float deltaTime)
+    {
+        float velocity = 1.0f* deltaTime;
+        switch (direction)
+        {
+            case Camera_Movement::FORWARD:
+                position += forward * velocity;
+                break;
+            case Camera_Movement::BACKWARD:
+                position -= forward * velocity;
+                break;
+            case Camera_Movement::LEFT:
+                position -= right * velocity;
+                break;
+            case Camera_Movement::RIGHT:
+                position += right * velocity;
+                break;
+            case Camera_Movement::UP:
+                position += up * velocity;
+                break;
+            case Camera_Movement::DOWN:
+                position -= up * velocity;
+                break;
+            default:
+                assert("direction error");
+                break;
+        }
+    }
  private:
   Vec3f position;
   Vec3f forward;

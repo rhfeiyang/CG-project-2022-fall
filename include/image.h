@@ -15,8 +15,11 @@ class ImageRGB {
   [[nodiscard]] Vec2i getResolution() const;
   void setPixel(int x, int y, const Vec3f &value);
   void writeImgToFile(const std::string &file_name);
+  uint8_t * getdata(){
+      return data.data();
+  }
  private:
-  std::vector<Vec3f> data;
+  std::vector<uint8_t> data;
   Vec2i resolution;
 };
 

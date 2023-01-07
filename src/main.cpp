@@ -3,6 +3,24 @@
 #include "VDBLoader.cpp"
 #include "config_io.h"
 #include "integrator.h"
+#include "utils.h"
+
+
+const int WIDTH = 800;
+const int HEIGHT = 300;
+
+bool firstMouse = true;
+float lastX = WIDTH / 2.f;
+float lastY = HEIGHT / 2.f;
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
+GLFWwindow *window;
+
+namespace GUI{
+
+
+}
 
 //#define TEST
 struct Local {
@@ -11,6 +29,69 @@ struct Local {
     }
 };
 
+std::chrono::time_point<std::chrono::system_clock> start, end;
+std::chrono::duration<double> elapsed_seconds;
+
+
+void processInput(GLFWwindow *window,std::shared_ptr<Camera> camera)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera->ProcessKeyboard(Camera_Movement::FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera->ProcessKeyboard(Camera_Movement::BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera->ProcessKeyboard(Camera_Movement::LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera->ProcessKeyboard(Camera_Movement::RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        camera->ProcessKeyboard(Camera_Movement::UP, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        camera->ProcessKeyboard(Camera_Movement::DOWN, deltaTime);
+}
+
+void mouse_callback(GLFWwindow *window, double x, double y)
+{
+    if (firstMouse)
+    {
+        lastX = x;
+        lastY = y;
+        firstMouse = false;
+    }
+
+    float xoffset = x - lastX;
+    float yoffset = lastY - y; // reversed since y-coordinates go from bottom to top
+
+    lastX = x;
+    lastY = y;
+
+
+}
+
+void scroll_callback(GLFWwindow* window, double x, double y)
+{
+
+}
+void RenderOpenGL()
+{
+    /*auto data = GenerateRandomData(WIDTH * HEIGHT * 3);
+    DrawContents(data);
+    delete[] data;*/
+    start = std::chrono::system_clock::now();
+
+
+    end = std::chrono::system_clock::now();
+    elapsed_seconds = end - start;
+    // update_scale();
+
+
+}
+void DrawContents(uint8_t *data)
+{
+    glDrawPixels(WIDTH, HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, data);
+}
 
 int main(int argc, char *argv[]) {
 
@@ -59,18 +140,34 @@ int main(int argc, char *argv[]) {
     VDBLoader<Vec3sGrid> loader(GetFilePath(config.file_path));
 
 //    Kdtree kdtree(loader.grids);
+    WindowGuard windowGuard(window, WIDTH, HEIGHT, "CG");
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+    while(!glfwWindowShouldClose(window)) {
+        float currentFrame = static_cast<float>(glfwGetTime());
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+        processInput(window,camera);
+        std::unique_ptr<Integrator> integrator
+                = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids,config.iso_value,config.var,config.step_scale);
+        integrator->render();
+        DrawContents(camera->getImage()->getdata());
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
 
 #ifndef TEST
     // init integrator
 //    auto single_grid=loader.grids.grids[0];
 //    auto length=(loader.grids.whole_wbbox.max() - loader.grids.whole_wbbox.min())[loader.grids.whole_wbbox.maxExtent()];
 //    auto dim=single_grid->evalActiveVoxelBoundingBox().dim();
-    std::unique_ptr<Integrator> integrator
-            = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids,config.iso_value,config.var,config.step_scale);
+
     std::cout << "Start Rendering..." << std::endl;
     auto start = std::chrono::steady_clock::now();
     // render scene
-    integrator->render();
+
     auto end = std::chrono::steady_clock::now();
     auto time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     std::cout << "\nRender Finished in " << time << "s." << std::endl;

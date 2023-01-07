@@ -4,7 +4,7 @@
 #include "config_io.h"
 #include "integrator.h"
 #include "utils.h"
-
+#include "scene.h"
 
 
 const int WIDTH = 800;
@@ -136,27 +136,27 @@ int main(int argc, char *argv[]) {
     std::shared_ptr<Camera> camera = std::make_shared<Camera>(config.cam_config, rendered_img);
     // construct scene.
     auto scene = std::make_shared<Scene>();
-//    initSceneFromConfig(config, scene);
+    initSceneFromConfig(config, scene);
 //load vdb
     VDBLoader<Vec3sGrid> loader(GetFilePath(config.file_path));
 
 //    Kdtree kdtree(loader.grids);
-    WindowGuard windowGuard(window, WIDTH, HEIGHT, "CG");
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+//    WindowGuard windowGuard(window, WIDTH, HEIGHT, "CG");
+//    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
-    while(!glfwWindowShouldClose(window)) {
-        float currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
-        processInput(window,camera);
-        std::unique_ptr<Integrator> integrator
-                = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids,config.iso_value,config.var,config.step_scale);
-        integrator->render();
-        DrawContents(camera->getImage()->getdata());
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
+//    while(!glfwWindowShouldClose(window)) {
+//        float currentFrame = static_cast<float>(glfwGetTime());
+//        deltaTime = currentFrame - lastFrame;
+//        lastFrame = currentFrame;
+//        processInput(window,camera);
+//        std::unique_ptr<Integrator> integrator
+//                = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids,config.iso_value,config.var,config.step_scale);
+//        integrator->render();
+//        DrawContents(camera->getImage()->getdata());
+//
+//        glfwSwapBuffers(window);
+//        glfwPollEvents();
+//    }
 
 
 #ifndef TEST
@@ -168,7 +168,9 @@ int main(int argc, char *argv[]) {
     std::cout << "Start Rendering..." << std::endl;
     auto start = std::chrono::steady_clock::now();
     // render scene
-
+    std::unique_ptr<Integrator> integrator
+            = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids,config.iso_value,config.var,config.step_scale);
+    integrator->render();
     auto end = std::chrono::steady_clock::now();
     auto time = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
     std::cout << "\nRender Finished in " << time << "s." << std::endl;

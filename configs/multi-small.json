@@ -1,6 +1,6 @@
 {
-  "spp": 1,
-  "image_resolution" : [1200, 1200],
+  "spp": 5,
+  "image_resolution" : [2560, 2560],
   "cam_config" : {
     "position" : [6.5,-5,3],
     "look_at": [6.5,2,3],
@@ -8,10 +8,37 @@
     "vertical_fov": 45,
     "focal_length" : 1
   },
+  "materials" : [
+    {
+      "color" : [0.725, 0.71, 0.68],
+      "name" : "grey_diffuse"
+    },
+    {
+      "color" : [0.14, 0.45, 0.091],
+      "name" : "green_diffuse"
+    },
+    {
+      "color" : [0.63, 0.065, 0.05],
+      "name" : "red_diffuse"
+    },
+    {
+      "color" : [0,0, 0.7],
+      "name" : "blue_diffuse"
+    }
+  ],
+  "objects": [
+  {
+    "path": "../resource/sphere.obj",
+    "material_name" : "red_diffuse",
+    "position": [5,2,3],
+    "scale": 1.33333,
+    "has_bvh" : false
+  }
+    ],
   "file_path": "../resource/multi-res big.vdb",
 
   "iso_value": 0.045,
 
   "var": 0.0007,
-  "step_scale": 0.5
+  "step_scale": 0.25
 }

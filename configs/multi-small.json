@@ -8,9 +8,10 @@
     "vertical_fov": 45,
     "focal_length" : 1
   },
-  "file_path": "../resource/multi-res big.vdb",
+  "file_path": "../resource/multi-es big.vdb",
 
   "iso_value": 0.045,
 
-  "var": 0.0007
+  "var": 0.0007,
+  "step_scale": 1
 }

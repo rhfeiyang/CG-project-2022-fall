@@ -114,3 +114,4 @@ resource/single-res big.vdb
 resource/README.md
 resource/multi-res small.vdb
 resource/multi-res big.vdb
+*.vdb

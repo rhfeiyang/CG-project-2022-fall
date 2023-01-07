@@ -20,6 +20,7 @@ struct Config {
   std::string file_path;
   float iso_value;
   float var;
+  float step_scale;
 };
 
 #endif // CONFIG_H

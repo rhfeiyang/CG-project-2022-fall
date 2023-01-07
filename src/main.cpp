@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 //    auto length=(loader.grids.whole_wbbox.max() - loader.grids.whole_wbbox.min())[loader.grids.whole_wbbox.maxExtent()];
 //    auto dim=single_grid->evalActiveVoxelBoundingBox().dim();
     std::unique_ptr<Integrator> integrator
-            = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids,config.iso_value,config.var);
+            = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids,config.iso_value,config.var,config.step_scale);
     std::cout << "Start Rendering..." << std::endl;
     auto start = std::chrono::steady_clock::now();
     // render scene

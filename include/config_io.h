@@ -17,7 +17,8 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Config,
                                    cam_config,
                                    file_path,
                                    iso_value,
-                                   var
+                                   var,
+                                   step_scale
                                    );
 
 #endif // CONFIG_IO_H_

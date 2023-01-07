@@ -9,21 +9,21 @@
 class Integrator {
 public:
     Integrator(std::shared_ptr<Camera> cam,
-               std::shared_ptr<Scene> scene, int spp,Grids_data &gridsData,  float iso_value, float var=sqrt(0.0000001));
+               std::shared_ptr<Scene> scene, int spp,Grids_data &gridsData,  float iso_value, float var=0.001, float step_scale=1);
 
     void render() const;
 
     [[nodiscard]] float opacity_transfer(float value) const;
 
-    [[nodiscard]] Vec3f color_transfer(float val) const;
+    [[nodiscard]] static Vec3f color_transfer(float val) ;
 
     [[nodiscard]] float interpolation(Vec3f pos, uint32_t grid_idx_bm) const;
 
-    static float opacity_correction(float step, float opacity);
+    static float opacity_correction(float actual_step, float step_base, float opacity);
 
     Vec3f front_to_back(Ray &ray) const;
 
-    [[nodiscard]] float sample_step(Vec3f pos, uint32_t grid_idx_bm) const;
+    [[nodiscard]] float step_Base(Vec3f pos, uint32_t grid_idx_bm) const;
 
 private:
     std::shared_ptr<Camera> camera;
@@ -35,7 +35,7 @@ private:
     Kdtree kdtree;
     float variance;
     float iso_value;
-//    bool isNearvalueon(Vec3f pos) const;
+    float step_scale;
 };
 
 #endif //INTEGRATOR_H_

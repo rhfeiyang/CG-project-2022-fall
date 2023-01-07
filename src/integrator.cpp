@@ -9,9 +9,9 @@
 
 Integrator::Integrator(std::shared_ptr<Camera> cam,
                        std::shared_ptr<Scene> scene, int spp, Grids_data &gridsData, float iso_value,
-                       float var)
+                       float var, float step_scale)
         : camera(std::move(cam)), scene(std::move(scene)), spp(spp), gridsData(gridsData), variance(var), iso_value(iso_value),
-          kdtree(gridsData) {}
+          kdtree(gridsData), step_scale(step_scale) {}
 
 void Integrator::render() const {
     auto grid = gridsData.grids[0];
@@ -59,11 +59,11 @@ float Integrator::opacity_transfer(float value) const {
     return 0;
 }
 
-float Integrator::opacity_correction(float step, float opacity) {
-    return 1 - pow((1 - opacity), step);
+float Integrator::opacity_correction(float actual_step, float step_base, float opacity) {
+    return 1 - pow((1 - opacity), actual_step/step_base);
 }
 
-Vec3f Integrator::color_transfer(float val) const {
+Vec3f Integrator::color_transfer(float val) {
     int b = (int)round(val * 100);
     return{0.0, (36 - b*b) * 0.4f / 36.0f + 0.6f, b * b * 0.4f / 36.0f + 0.6f};
 //    return {0,0.8, 1.0};
@@ -79,7 +79,7 @@ Vec3f Integrator::color_transfer(float val) const {
 //}
 
 inline float AMR_basis(float dx, const FloatGrid & grid, const Vec3f &pos) {
-    const Vec3i inIdx = openvdb::tools::local_util::floorVec3(grid.worldToIndex(pos));
+    const Vec3i inIdx = floorVec3(grid.worldToIndex(pos));
     const Vec3f cell_pos = grid.indexToWorld(inIdx);
 //    auto ijk = Coord(inIdx);
     const auto& inTree = grid.tree();
@@ -195,7 +195,7 @@ float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm) const {
 
 }
 
-float Integrator::sample_step(Vec3f pos, uint32_t grid_idx_bm) const{
+float Integrator::step_Base(Vec3f pos, uint32_t grid_idx_bm) const{
     float step=std::numeric_limits<float>::max();
 //    for(auto i:grid_idx){
     for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
@@ -209,8 +209,9 @@ float Integrator::sample_step(Vec3f pos, uint32_t grid_idx_bm) const{
 Vec3f interleaved_sampling(Vec3f dt, Vec3f t0){
     Sampler sampler;
     auto rho=sampler.get1D();
-    dt*(rho+ceil((t0+rho*dt)/dt));
+    return dt*(Vec3f(rho)+ceilVec3((t0+rho*dt)/dt));
 }
+
 
 Vec3f Integrator::front_to_back(Ray &ray) const {
     auto grid = gridsData.grids[0];
@@ -222,29 +223,33 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     std::array<float, 2> t_range{};
     if(!ray_bbox_range(ray,gridsData.whole_wbbox,t_range))
         return result;
-    auto limit=t_range[1]-t_range[0]-2*EPS;
+    auto limit=t_range[1]-t_range[0];
     ray.origin=ray(t_range[0]+EPS);
+    auto contribute_grids_bm=kdtree.grid_contribute(ray.origin);
+    float step_base= step_Base(ray.origin,contribute_grids_bm);
+    auto actual_step=step_base*step_scale;
+    ray.origin=interleaved_sampling(actual_step*ray.direction,ray.origin)-EPS;
+
 
     while (T>0.05 && limit > 0) {
-//        if (!(gridsData.whole_wbbox.isInside(temp_pos)))
-//            continue;
-        auto contribute_grids_bm=kdtree.grid_contribute(ray.origin);
-//        float step= sample_step(ray.origin,contribute_grids);
-//        auto temp_val = interpolation(ray.origin,contribute_grids);
-        float step= sample_step(ray.origin,contribute_grids_bm);
-        auto temp_val = interpolation(ray.origin,contribute_grids_bm);
-//        if (temp_val > 1.0f) cout << temp_val << endl;
-//        sample(grid->tree(), grid->worldToIndex(temp_pos), temp_val);
-        auto opacity = opacity_correction(step, opacity_transfer(temp_val));
+        auto next_pos=ray(actual_step);
+        auto sample_pos=(ray.origin+next_pos)/2;
+
+        auto temp_val = interpolation(sample_pos,contribute_grids_bm);
+        auto opacity = opacity_correction(actual_step,step_base , opacity_transfer(temp_val));
 
         result += T * opacity * color_transfer(temp_val);
         T *= (1.0f - opacity);
-        ray.origin=ray(step);
-        limit -= step;
+
+        ray.origin=next_pos;
+        limit -= actual_step;
+
+        contribute_grids_bm=kdtree.grid_contribute(ray.origin);
+        step_base= step_Base(ray.origin, contribute_grids_bm);
+        actual_step=step_base*step_scale;
 //        cout<<result<<endl;
     }
-//    cout<<cnt<<endl;
-//    cout<<T<<" "<<limit<<endl;
+
     return result;
 }
 

@@ -35,6 +35,7 @@ using Mat3f=openvdb::Mat3s;
 using Coord=openvdb::Coord;
 using iBBox=openvdb::CoordBBox;
 using wBBox=openvdb::BBoxd;
+using namespace openvdb::tools::local_util;
 using Vec3sGrid=openvdb::v10_0::Vec3SGrid;
 using FloatGrid=openvdb::v10_0::FloatGrid;
 

@@ -31,14 +31,14 @@
     }
   ],
   "objects": [
-  {
-    "path": "../resource/sphere.obj",
-    "material_name" : "blue_diffuse",
-    "position": [5,2,3],
-    "scale": 1.33333333333333,
-    "has_bvh" : true
-  }
-    ],
+    {
+      "path": "../resource/sphere.obj",
+      "material_name" : "blue_diffuse",
+      "position": [5,2,3],
+      "scale": 1.33333333333333,
+      "has_bvh" : true
+    }
+  ],
   "file_path": "../resource/multi-res big.vdb",
 
   "iso_value": 0.045,

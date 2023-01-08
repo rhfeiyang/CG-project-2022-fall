@@ -50,11 +50,11 @@ float Integrator::opacity_transfer(float value) const {
     //first for isovalue of iso-surface, second for value to be the opacity
     //using Gauss pdf
 
-    if (0.01 < value && value < 0.02) {
+    if (0.001 < value && value < 0.03) {
         // 0.001 - 0.01: Gauss
         // 0.01 - 0.02: 1
         // 0.02 - 0.03: Gauss
-        return std::min(1.0, 1.6 * exp(-0.5 * (value - 0.015) * (value - 0.015) / (0.005 * 0.005)));
+        return std::min(1.0, 7.38 * exp(-0.5 * (value - 0.015) * (value - 0.015) / (0.0025 * 0.0025)));
     }
     return 0;
 }
@@ -63,7 +63,7 @@ float Integrator::opacity_correction(float actual_step, float opacity) {
     return 1 - pow((1 - opacity), actual_step);
 }
 
-Vec3f Integrator::color_transfer(float val) {
+Vec3f Integrator::color_transfer(float val){
     Vec3f r = Vec3f{1, 0.05, 0.05} * 0.8;
     Vec3f g = Vec3f{0.05, 1, 0.05} * 0.8;
     Vec3f b = Vec3f{0.05, 0.05, 1} * 0.8;

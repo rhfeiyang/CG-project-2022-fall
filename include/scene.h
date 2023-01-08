@@ -27,6 +27,9 @@ public:
 
     bool isShadowed(Ray &shadow_ray);
     bool intersect(Ray &ray, Interaction &interaction);
+    void setObjColor(Vec3f color){
+        objects[0]->setColor(color);
+    }
 
 private:
     std::vector<std::shared_ptr<TriangleMesh>> objects;

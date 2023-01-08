@@ -27,7 +27,12 @@ namespace VolumeRendering {
     std::chrono::time_point<std::chrono::system_clock> start, end;
     std::unique_ptr<Integrator> integrator;
 
-    bool show_demo_window = true;
+    //render parameters
+    float iso_value = 0.03;
+    float s_color[3];
+
+    //
+    bool show_demo_window = false;
     bool render = false;
     bool write_img = false;
 
@@ -76,6 +81,9 @@ namespace VolumeRendering {
         //load vdb
         loader.load(GetFilePath(config.file_path));
         std::cout << "Initialize Setting Finished" << std::endl;
+
+        //init parameters
+        iso_value = config.iso_value;
     }
 
     void DrawContents(std::shared_ptr<ImageRGB> &img) {
@@ -90,9 +98,10 @@ namespace VolumeRendering {
         render = false;
     }
 
-    void RenderOpenGL(){
+    void RenderOpenGL() {
         DrawContents(camera->getImage());
     }
+
     void WriteImg() {
         rendered_img->writeImgToFile("../result.png");
         std::cout << "Image saved to disk." << std::endl;
@@ -108,12 +117,23 @@ namespace VolumeRendering {
         {
             ImGui::Begin("Volume Rendering");
             ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
+
+            if (ImGui::TreeNode("Render settings")) {
+                ImGui::SliderFloat("iso-value", &iso_value, 0, 20);
+                integrator->setiso_value(iso_value);
+                ImGui::ColorEdit3("Sphere Color", s_color);
+                scene->setObjColor(Vec3f(s_color));
+
+            }
+
+
             if (show_demo_window)
                 ImGui::ShowDemoWindow(&show_demo_window);
 
             if (ImGui::Button("Start Rendering")) {
                 render = true;
             }
+
 
             if (render) {
                 std::cout << "Start Rendering..." << std::endl;
@@ -143,8 +163,8 @@ namespace VolumeRendering {
         glViewport(0, 0, display_w, display_h);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
-    void processInput(GLFWwindow *window)
-    {
+
+    void processInput(GLFWwindow *window) {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
 
@@ -187,7 +207,7 @@ int main(int argc, char *argv[]) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext(); // Setup Dear ImGui context
     ImGuiIO &io = ImGui::GetIO();
-    (void)io;
+    (void) io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 

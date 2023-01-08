@@ -27,6 +27,10 @@ public:
     [[nodiscard]] float step_Base(const int& finest_grid) const;
     Vec3f phoneLighting(Interaction& inter) const;
 
+    void setiso_value(float value){
+        iso_value=value;
+    }
+
 private:
     std::shared_ptr<Camera> camera;
     std::shared_ptr<Scene> scene;

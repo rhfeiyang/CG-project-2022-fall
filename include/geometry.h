@@ -259,6 +259,7 @@ class TriangleMesh {
         return new_offset;
     }
 
+
  private:
   bool intersectOneTriangle(Ray &ray, Interaction &interaction, const Vec3i& v_idx, const Vec3i& n_idx) const;
   void bvhHit(BVHNode *p, Interaction &interaction,

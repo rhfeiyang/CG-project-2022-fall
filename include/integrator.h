@@ -17,7 +17,7 @@ public:
 
     [[nodiscard]] static Vec3f color_transfer(float val) ;
 
-    [[nodiscard]] Vec2f interpolation(Vec3f pos, uint32_t grid_idx_bm) const;
+    [[nodiscard]] Vec2f interpolation(Vec3f pos, uint32_t grid_idx_bm, int& finest_grid) const;
 
     static float opacity_correction(float actual_step, float opacity);
 

@@ -1,6 +1,6 @@
 {
-  "spp": 1,
-  "image_resolution" : [800, 800],
+  "spp": 2,
+  "image_resolution" : [1200, 1200],
   "cam_config" : {
     "position" : [7,-6,3],
     "look_at": [7,2,3],
@@ -35,7 +35,7 @@
     "path": "../resource/sphere.obj",
     "material_name" : "blue_diffuse",
     "position": [5,2,3],
-    "scale": 1.34,
+    "scale": 1.36,
     "has_bvh" : true
   }
     ],

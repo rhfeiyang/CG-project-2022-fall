@@ -51,8 +51,8 @@ void Integrator::render() const {
 float Integrator::opacity_transfer(float value) const {
     //first for isovalue of iso-surface, second for value to be the opacity
     //using Gauss pdf
-    if (value > 0.01) {
-        return 0.6;
+    if (value > 1) {
+        return 0.95 * exp(-0.5 * (value - 4) * (value - 4) / (2 * 2));
 //        float xu = value - 1.0;
 //        return 0.9 * exp(-0.5*xu*xu/(1.0*1.0));
     }
@@ -70,10 +70,23 @@ float Integrator::opacity_correction(float actual_step, float opacity) {
 }
 
 Vec3f Integrator::color_transfer(float val) {
-    float r = std::min(1.0, std::sqrt(val * val / 4.0));
-    float g = std::max(0.0, std::sqrt(2 * val * (2.0 - val) / 4.0));
-    float b = std::max(0.0, std::sqrt((val - 2.0) * (val - 2.0) / 4.0));
-    return {r, g, b};
+//    float r = std::min(1.0, std::sqrt(val * val / 4.0));
+//    float g = std::max(0.0, std::sqrt(2 * val * (2.0 - val) / 4.0));
+//    float b = val > 2 ? 0 : std::sqrt((val - 2.0) * (val - 2.0) / 4.0);
+//    return {r, g, b};
+//    float r = std::max(1.0, val > 2 ? (val - 2) / 5.0 : 0);
+//    float b = std::max(1.0, val < 7 ? (7 - val) / 5.0 : 0);
+    if (val < 1) {
+        return {0,0,0};
+    }
+    else if (val < 5) {
+        float r = std::sqrt((val - 1) / 4.0);
+        float b = std::sqrt((5 - val) / 4.0);
+        return {r, 0.4, b};
+    }
+    else {
+        return {1, 0.4, 0};
+    }
 }
 
 inline float sample(float dx, const FloatGrid &grid, const Vec3f &pos) {

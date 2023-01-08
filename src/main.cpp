@@ -85,14 +85,17 @@ namespace VolumeRendering {
         //load vdb
         loader.load(GetFilePath(config.file_path));
     }
-    void DrawContents(uint8_t *data) {
-        glDrawPixels(WIDTH, HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+    void DrawContents(std::shared_ptr<ImageRGB> &img) {
+        Vec2i res=img->getResolution();
+        glDrawPixels(res[0], res[1], GL_RGB, GL_UNSIGNED_BYTE, img->getdata());
     }
+
     void RenderImg() {
         integrator = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids, config.iso_value, config.var,
                                                   config.step_scale);
         integrator->render();
-        DrawContents(camera->getImage()->getdata());
+        DrawContents(camera->getImage());
         render = false;
     }
 
@@ -103,11 +106,9 @@ namespace VolumeRendering {
     }
 
     void RenderMainImGui() {
-
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-
         // 1. Show the big demo window//
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
@@ -124,7 +125,7 @@ namespace VolumeRendering {
 
             end = std::chrono::system_clock::now();
             auto time = std::chrono::duration<double>(end - start);
-            std::cout << "\nRender Finished in " << time << "s." <<std::endl;
+            std::cout << "\nRender Finished in " << time << "s." << std::endl;
 
         }
 
@@ -190,7 +191,6 @@ void mouse_callback(GLFWwindow *window, double x, double y) {
 }
 
 
-
 int main(int argc, char *argv[]) {
 
     VolumeRendering::LoadingConfig(argc, argv);
@@ -211,7 +211,10 @@ int main(int argc, char *argv[]) {
     const char *glsl_version = "#version 130";
     ImGui_ImplGlfw_InitForOpenGL(window, true); // Setup Platform/Renderer bindings
     ImGui_ImplOpenGL3_Init(glsl_version);
-
+#ifndef TEST
+    VolumeRendering::RenderImg();
+    VolumeRendering::WriteImg();
+#else
     while (!glfwWindowShouldClose(window)) {
         //processInput(window);
         VolumeRendering::RenderMainImGui();
@@ -220,7 +223,7 @@ int main(int argc, char *argv[]) {
     }
 
 
-#ifndef TEST
+
     // init integrator
 //    auto single_grid=loader.grids.grids[0];
 //    auto length=(loader.grids.whole_wbbox.max() - loader.grids.whole_wbbox.min())[loader.grids.whole_wbbox.maxExtent()];
@@ -228,7 +231,7 @@ int main(int argc, char *argv[]) {
 
 
 
-#else
+
     //    loader.SortBydx();
     //Construct ABR
     //    std::vector<Cell> cells;

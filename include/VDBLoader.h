@@ -1,5 +1,5 @@
-#ifndef __VDB_VOLUME_LOADER_H__
-#define __VDB_VOLUME_LOADER_H__
+#ifndef VDB_VOLUME_LOADER_H_
+#define VDB_VOLUME_LOADER_H_
 
 #include <memory>
 #include "common.h"
@@ -7,12 +7,12 @@
 #include <algorithm>
 
 
-template<typename GridType>
+//template<typename GridType>
 class VDBLoader {
 public:
-    using TreeType = typename GridType::TreeType;
+//    using TreeType = typename GridType::TreeType;
 
-    explicit VDBLoader(std::string filename);
+    explicit VDBLoader(const std::string& filename);
 
     ~VDBLoader();
 
@@ -28,10 +28,11 @@ public:
     std::vector<std::string> gridNames;
     std::string filename;
 
-    std::string getGridType(openvdb::GridBase::Ptr grid);
+    static std::string getGridType(const openvdb::GridBase::Ptr& grid);
+    static float q_criterion(const Vec3sGrid& grid,const Coord& coord,const iBBox& ibbox);
 //    void SortBydx();
-
 private:
 };
 
-#endif /* __VDB_VOLUME_LOADER_H__ */
+
+#endif /* VDB_VOLUME_LOADER_H_ */

@@ -73,6 +73,7 @@ using gMat4 = glm::mat<4, 4, Float, glm::defaultp>;
 std::string GetFilePath(const std::string& target, int depth = 5);
 
 struct Grids_data{
+    void addGrid(const FloatGrid::Ptr& grid,const iBBox& ibbox);
     void addGrid(const FloatGrid::Ptr& grid);
     std::vector<FloatGrid::Ptr> grids;
     std::vector<double> dx;

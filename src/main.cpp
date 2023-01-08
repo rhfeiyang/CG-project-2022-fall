@@ -1,6 +1,6 @@
 #include "common.h"
 #include "VDBLoader.h"
-#include "VDBLoader.cpp"
+
 #include "config_io.h"
 #include "integrator.h"
 #include "utils.h"
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
     auto scene = std::make_shared<Scene>();
     initSceneFromConfig(config, scene);
 //load vdb
-    VDBLoader<Vec3sGrid> loader(GetFilePath(config.file_path));
+    VDBLoader loader(GetFilePath(config.file_path));
 
 //    Kdtree kdtree(loader.grids);
 //    WindowGuard windowGuard(window, WIDTH, HEIGHT, "CG");

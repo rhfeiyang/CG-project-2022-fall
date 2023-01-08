@@ -51,7 +51,7 @@ void Integrator::render() const {
 float Integrator::opacity_transfer(float value) const {
     //first for isovalue of iso-surface, second for value to be the opacity
     //using Gauss pdf
-    if (value > 0.2) {
+    if (value > 0.01) {
         return 0.6;
 //        float xu = value - 1.0;
 //        return 0.9 * exp(-0.5*xu*xu/(1.0*1.0));

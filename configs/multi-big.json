@@ -1,6 +1,6 @@
 {
-  "spp": 1,
-  "image_resolution" : [800, 800],
+  "spp": 3,
+  "image_resolution" : [600, 600],
   "cam_config" : {
     "position" : [7,-6,3],
     "look_at": [7,2,3],
@@ -31,18 +31,18 @@
     }
   ],
   "objects": [
-  {
-    "path": "../resource/sphere.obj",
-    "material_name" : "blue_diffuse",
-    "position": [5,2,3],
-    "scale": 1.36,
-    "has_bvh" : true
-  }
-    ],
+    {
+      "path": "../resource/sphere.obj",
+      "material_name" : "blue_diffuse",
+      "position": [5,2,3],
+      "scale": 1.33333333333333,
+      "has_bvh" : true
+    }
+  ],
   "file_path": "../resource/multi-res big.vdb",
 
   "iso_value": 0.045,
 
   "var": 0.0007,
-  "step_scale":1
+  "step_scale":0.25
 }

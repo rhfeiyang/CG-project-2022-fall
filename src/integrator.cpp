@@ -50,11 +50,11 @@ float Integrator::opacity_transfer(float value) const {
     //first for isovalue of iso-surface, second for value to be the opacity
     //using Gauss pdf
 
-    if (0.001 < value && value < 0.03) {
-        // 0.001 - 0.01: Gauss
+    if (0.009 < value && value < 0.03) {
+        // 0.006 - 0.01: Gauss
         // 0.01 - 0.02: 1
         // 0.02 - 0.03: Gauss
-        return std::min(1.0, 7.38 * exp(-0.5 * (value - 0.015) * (value - 0.015) / (0.0025 * 0.0025)));
+        return std::min(1.0, 1.6 * exp(-0.5 * (value - 0.015) * (value - 0.015) / (0.005 * 0.005)));
     }
     return 0;
 }
@@ -67,23 +67,26 @@ Vec3f Integrator::color_transfer(float val)const {
     /*Vec3f r = Vec3f{1, 0.05, 0.05} * 0.8;
     Vec3f g = Vec3f{0.05, 1, 0.05} * 0.8;
     Vec3f b = Vec3f{0.05, 0.05, 1} * 0.8;
-    if (val < 0.01) {
+    if (val < 0.015) {
         return b;
     }
     else if (val < 0.035) {
-        return (0.035 - val) / 0.02 * b + (val - 0.01) / 0.025 * g;
+        return (0.035 - val) / 0.02 * b + (val - 0.015) / 0.02 * g;
     }
     else if (val < 0.045) {
         return g;
     }
-    else if (val < 0.07) {
-        return (0.07 - val) / 0.02 * g + (val - 0.045) / 0.025 * r;
+    else if (val < 0.065) {
+        return (0.065 - val) / 0.02 * g + (val - 0.045) / 0.02 * r;
     }
     else {
         return r;
     }*/
 
     for (int i = 0; i < colors.size(); ++i) {
+        // TODO 1、对于color前后0.005，即共0.01的区间内，都为这个点的颜色 i.e. 0.4 -> 0.35~0.45
+        // 2、对于两个区间之间的部分，进行插值，注意分母 i.e. 0.04&0.08 -> 0.045~0.075区间需要插值 -> 分母是0.075-0.045=0.03
+        // 3、对于小于最小点or大于最大点区间的部分，按照最小点or最大点
         if (i == 0 && val < points[i]) {
             return colors[i];
         } else if (points[i - 1] < val && val < points[i]) {

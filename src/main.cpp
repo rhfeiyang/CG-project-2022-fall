@@ -102,8 +102,8 @@ namespace VolumeRendering {
         colors.push_back({0.05, 1, 0.05});
         colors.push_back({1, 0.05, 0.05});
         points.push_back(0.01);
-        points.push_back(0.03);
-        points.push_back(0.06);
+        points.push_back(0.04);
+        points.push_back(0.07);
         integrator->SetColors(colors);
         integrator->SetPoints(points);
 

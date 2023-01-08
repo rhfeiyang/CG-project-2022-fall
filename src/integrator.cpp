@@ -19,11 +19,7 @@ void Integrator::render() const {
     Vec2i resolution = camera->getImage()->getResolution();
     Sampler sampler;
     int cnt = 0;
-    std::vector<Vec2f> real_sample_points;
 
-    for (int i = 1; i <= spp; i++) {
-        real_sample_points.emplace_back(sampler.get2D());
-    }
 #ifdef OMP
 #pragma omp parallel for schedule(dynamic), shared(cnt), private(sampler)
 #endif
@@ -38,10 +34,12 @@ void Integrator::render() const {
             Vec3f L(0, 0, 0);
 //            auto ray = camera->generateRay(0.5f+dx,0.5f+dy);
 //            L += front_to_back(ray, grid->metaValue<double>("dx"));
-            for (auto i: real_sample_points) {
+            for(int s=0;s<spp;++s){
+                auto i=sampler.get2D();
                 auto ray = camera->generateRay(i.x() + dx, i.y() + dy);
                 L += front_to_back(ray);
             }
+
             L /= spp;
             camera->getImage()->setPixel(dx, dy, L);
         }

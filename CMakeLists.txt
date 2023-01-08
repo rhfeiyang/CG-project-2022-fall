@@ -14,7 +14,10 @@ include_directories(src)
 #include_directories(libs)
 add_subdirectory(libs)
 #add_subdirectory(cuda)
-
+include_directories(
+        libs/imgui    # imgui
+        libs/imguizmo # imguizmo
+)
 set(HEADS
         include/Cell.h
         include/Brick.h
@@ -57,11 +60,22 @@ set(SRC
 #        trash/input.cpp
 #        trash/shader.cpp
 #        trash/scene.cpp
+
+
         src/ray.cpp src/load_obj.cpp src/geometry.cpp src/accel.cpp)
 
 #set (EXTRA_LIBS ${EXTRA_LIBS} gpu)
-
-add_executable(${PROJECT_NAME} ${HEADS} ${SRC})
+set(GUI_SOURCES
+        libs/imguizmo/ImGuizmo.cpp
+        libs/imgui/imgui.cpp
+        libs/imgui/backends/imgui_impl_glfw.cpp
+        libs/imgui/backends/imgui_impl_opengl3.cpp
+        libs/imgui/imgui_draw.cpp
+        libs/imgui/imgui_demo.cpp
+        libs/imgui/imgui_tables.cpp
+        libs/imgui/imgui_widgets.cpp
+        )
+add_executable(${PROJECT_NAME} ${HEADS} ${SRC} ${GUI_SOURCES})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json stb OpenMP::OpenMP_CXX tinyobjloader)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenVDB::openvdb)

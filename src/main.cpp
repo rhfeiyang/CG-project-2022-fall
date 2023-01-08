@@ -5,6 +5,7 @@
 #include "integrator.h"
 #include "utils.h"
 #include "scene.h"
+#include <vector>
 
 //imGUI
 #include <imgui.h>
@@ -30,6 +31,8 @@ namespace VolumeRendering {
     //render parameters
     float iso_value = 0.03;
     float s_color[3];
+    std::vector<Vec3f> colors(1);
+    std::vector<float> points(1);
 
     //
     bool show_demo_window = false;
@@ -104,7 +107,7 @@ namespace VolumeRendering {
 
     void WriteImg() {
         rendered_img->writeImgToFile("../result.png");
-        std::cout << "\nImage saved to disk." << std::endl;
+        std::cout << "Image saved to disk." << std::endl;
         write_img = false;
     }
 
@@ -119,10 +122,60 @@ namespace VolumeRendering {
             ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
 
             if (ImGui::TreeNode("Render settings")) {
-                ImGui::SliderFloat("iso-value", &iso_value, 0, 20);
+                ImGui::SliderFloat("iso-value", &iso_value, 0, 1);
                 integrator->setiso_value(iso_value);
                 ImGui::ColorEdit3("Sphere Color", s_color);
                 scene->setObjColor(Vec3f(s_color));
+                ImGui::Text("Colors");
+
+                //add color
+                if(ImGui::Button("Add")){
+                    colors.push_back(Vec3f{1,1,1});
+                }
+                ImGui::SameLine();
+                if(ImGui::Button("Remove")){
+                    colors.pop_back();
+                }
+                static int selected = 0;
+                {
+                    ImGui::BeginChild("left pane", ImVec2(150, 0), true);
+
+                    for (int i = 0; i < colors.size(); ++i) {
+                        char label[128];
+                        sprintf(label, "MyObject %d", i);
+                        if (ImGui::Selectable(label, selected == i))
+                            selected = i;
+                    }
+                    ImGui::EndChild();
+                }
+                ImGui::SameLine();
+                {
+                    ImGui::BeginGroup();
+                    ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
+                    ImGui::Text("MyObject: %d", selected);
+                    ImGui::Separator();
+
+                    if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
+                    {
+                        if (ImGui::BeginTabItem("Color"))
+                        {
+                            ImGui::ColorEdit3("Pick Color",colors[selected].asPointer());
+                            ImGui::EndTabItem();
+                        }
+                        if (ImGui::BeginTabItem("position"))
+                        {
+                            ImGui::SliderFloat("Pick point",&points[selected],0,1);
+                            ImGui::EndTabItem();
+                        }
+                        ImGui::EndTabBar();
+                    }
+
+
+
+                    ImGui::EndChild();
+                    ImGui::EndGroup();
+
+                }
 
             }
 
@@ -216,21 +269,20 @@ int main(int argc, char *argv[]) {
     ImGui_ImplGlfw_InitForOpenGL(window, true); // Setup Platform/Renderer bindings
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    
     VolumeRendering::RenderImg();
     VolumeRendering::WriteImg();
-//    while (!glfwWindowShouldClose(window)) {
-//        VolumeRendering::processInput(window);
-//        VolumeRendering::RenderOpenGL();
-//        VolumeRendering::RenderMainImGui();
-//        glfwSwapBuffers(window);
-//        glfwPollEvents();
-//    }
-//
-//    // Cleanup
-//    ImGui_ImplOpenGL3_Shutdown();
-//    ImGui_ImplGlfw_Shutdown();
-//    ImGui::DestroyContext();
+    while (!glfwWindowShouldClose(window)) {
+        VolumeRendering::processInput(window);
+        VolumeRendering::RenderOpenGL();
+        VolumeRendering::RenderMainImGui();
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
 
 #define TEST

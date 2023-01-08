@@ -2,8 +2,8 @@
 #include "VDBLoader.h"
 
 inline float VDBLoader::q_criterion(const Vec3sGrid &grid, const Coord &coord, const iBBox &ibbox) {
-//    auto dx = grid.metaValue<double>("dx");
-    float dx = 0.008;
+    auto dx = grid.metaValue<double>("dx");
+//    float dx = 0.008;
     auto max_coord = ibbox.max();
     auto acc_grid = grid.getAccessor();
     Coord dx_coord{1, 0, 0};

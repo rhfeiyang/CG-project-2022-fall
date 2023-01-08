@@ -9,7 +9,7 @@
     "focal_length" : 1
   },
   "light_config" : {
-    "position": [4.5,-5,5],
+    "position": [5,-5,5],
     "radiance" : [1,1,1]
   },
   "materials" : [

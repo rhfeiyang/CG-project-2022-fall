@@ -216,19 +216,21 @@ int main(int argc, char *argv[]) {
     ImGui_ImplGlfw_InitForOpenGL(window, true); // Setup Platform/Renderer bindings
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-
-    while (!glfwWindowShouldClose(window)) {
-        VolumeRendering::processInput(window);
-        VolumeRendering::RenderOpenGL();
-        VolumeRendering::RenderMainImGui();
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    // Cleanup
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
+    
+    VolumeRendering::RenderImg();
+    VolumeRendering::WriteImg();
+//    while (!glfwWindowShouldClose(window)) {
+//        VolumeRendering::processInput(window);
+//        VolumeRendering::RenderOpenGL();
+//        VolumeRendering::RenderMainImGui();
+//        glfwSwapBuffers(window);
+//        glfwPollEvents();
+//    }
+//
+//    // Cleanup
+//    ImGui_ImplOpenGL3_Shutdown();
+//    ImGui_ImplGlfw_Shutdown();
+//    ImGui::DestroyContext();
 
 
 #define TEST

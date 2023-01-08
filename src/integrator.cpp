@@ -119,7 +119,7 @@ inline Vec2f sample(float dx, const Vec3sGrid &grid, const Vec3f &pos) {
     return {sum_weightednorm / sum_weights, sum_weightedq / sum_weights};
 }
 
-inline Vec3f gradient(float dx, const Vec3sGrid &grid, const Vec3f &pos) {
+inline bool gradient(float dx, const Vec3sGrid &grid, const Vec3f &pos, Vec3f & result) {
     const Vec3i inIdx = floorVec3(grid.worldToIndex(pos));
     const Vec3f cell_pos = grid.indexToWorld(inIdx);
     const auto &inTree = grid.tree();
@@ -151,7 +151,11 @@ inline Vec3f gradient(float dx, const Vec3sGrid &grid, const Vec3f &pos) {
         }
         grad[axis] = (sum_weights - sum_weightedValues) * sum_dH_dxyz / (sum_weights * sum_weights);
     }
-    return grad;
+    if(grad.lengthSqr()>0){
+        result=grad.unit();
+        return true;
+    }
+    else return false;
 }
 
 
@@ -228,7 +232,6 @@ Vec3f Integrator::phoneLighting(Interaction &interaction) const {
 }
 
 Vec3f Integrator::front_to_back(Ray &ray) const {
-    auto grid = gridsData.grids[0];
     ray.direction.normalize();
 //    cout<<ray.direction<<endl;
     Vec3f result{0, 0, 0};
@@ -252,18 +255,27 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
         auto sample_pos = (ray.origin + next_pos) / 2;
         contribute_grids_bm = kdtree.grid_contribute(sample_pos);
         if(path_has_obj){
-            if(interaction.dist<actual_step/2){
+            if(interaction.dist<actual_step + EPS){
                 result+=T* phoneLighting(interaction);
                 break;
             }
             interaction.dist-=actual_step;
         }
-        auto temp_val = interpolation(sample_pos, contribute_grids_bm);
+        int finest_grid_idx;
+        auto temp_val = interpolation(sample_pos, contribute_grids_bm,finest_grid_idx);
         // temp = {norm, q};
         auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val[1]));
-        result += T * opacity * color_transfer(temp_val[0]);
-        T *= (1.0f - opacity);
 
+        if(opacity>0.001){
+            Vec3f grad;
+            auto color=color_transfer(temp_val[0]);
+            if(gradient(step_base,*gridsData.grids[finest_grid_idx],sample_pos,grad)){
+                Interaction inter{sample_pos,1,grad,color};
+                color+=phoneLighting(inter);
+            }
+            result += T * opacity * color;
+            T *= (1.0f - opacity);
+        }
         ray.origin = next_pos;
         limit -= actual_step;
 

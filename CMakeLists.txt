@@ -62,7 +62,7 @@ set(SRC
 #        trash/scene.cpp
 
 
-        src/ray.cpp src/load_obj.cpp src/geometry.cpp src/accel.cpp src/light.cpp)
+        src/ray.cpp src/load_obj.cpp src/geometry.cpp src/accel.cpp src/light.cpp src/utils.cpp)
 
 #set (EXTRA_LIBS ${EXTRA_LIBS} gpu)
 set(GUI_SOURCES

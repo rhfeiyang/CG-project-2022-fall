@@ -1,6 +1,6 @@
 {
   "spp": 1,
-  "image_resolution" : [400, 400],
+  "image_resolution" : [1200, 1200],
   "cam_config" : {
     "position" : [6.5,-5,3],
     "look_at": [6.5,2,3],

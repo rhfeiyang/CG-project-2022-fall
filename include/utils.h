@@ -1,11 +1,9 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
+#include "common.h"
 #include <random>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+
 
 namespace utils {
 
@@ -58,37 +56,12 @@ private:
     std::exit(1);                                                    \
   } while (0)
 
-class WindowGuard {
-public:
-    WindowGuard(GLFWwindow *&window, const int width, const int height,
-                const std::string &title) {
-        if (!glfwInit()) LOG_ERR("Failed to init glfw");
+struct WindowGuard final {
+    WindowGuard(GLFWwindow *&, const int width, const int height, const std::string &title);
 
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-#ifdef __APPLE__
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#else
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
-#endif
-        glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-
-        // create window
-        if (!(window =
-                      glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr)))
-            LOG_ERR("failed to create glfw window");
-
-        glfwMakeContextCurrent(window);
-        // enable vsync
-        glfwSwapInterval(1);
-        // init glad
-        if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
-            LOG_ERR("failed to init glad");
-        glViewport(0, 0, width, height);
-    }
-
-    ~WindowGuard() { glfwTerminate(); }
+    ~WindowGuard();
 };
+
+
 
 #endif //UTILS_H_

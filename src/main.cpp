@@ -13,15 +13,6 @@
 #include <ImGuizmo.h>
 
 
-const int WIDTH = 800;
-const int HEIGHT = 300;
-
-bool firstMouse = true;
-float lastX = WIDTH / 2.f;
-float lastY = HEIGHT / 2.f;
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
-
 GLFWwindow *window;
 
 namespace VolumeRendering {
@@ -36,7 +27,7 @@ namespace VolumeRendering {
     std::chrono::time_point<std::chrono::system_clock> start, end;
     std::unique_ptr<Integrator> integrator;
 
-    bool show_demo_window = false;
+    bool show_demo_window = true;
     bool render = false;
     bool write_img = false;
 
@@ -84,10 +75,11 @@ namespace VolumeRendering {
         scene->setAmbient(Vec3f(0.1, 0.1, 0.1));
         //load vdb
         loader.load(GetFilePath(config.file_path));
+        std::cout << "Initialize Setting Finished" << std::endl;
     }
 
     void DrawContents(std::shared_ptr<ImageRGB> &img) {
-        Vec2i res=img->getResolution();
+        Vec2i res = img->getResolution();
         glDrawPixels(res[0], res[1], GL_RGB, GL_UNSIGNED_BYTE, img->getdata());
     }
 
@@ -95,10 +87,12 @@ namespace VolumeRendering {
         integrator = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids, config.iso_value, config.var,
                                                   config.step_scale);
         integrator->render();
-        DrawContents(camera->getImage());
         render = false;
     }
 
+    void RenderOpenGL(){
+        DrawContents(camera->getImage());
+    }
     void WriteImg() {
         rendered_img->writeImgToFile("../result.png");
         std::cout << "Image saved to disk." << std::endl;
@@ -110,29 +104,36 @@ namespace VolumeRendering {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         // 1. Show the big demo window//
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
 
-        if (ImGui::Button("Start Rendering")) {
-            render = true;
+        {
+            ImGui::Begin("Volume Rendering");
+            ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
+            if (show_demo_window)
+                ImGui::ShowDemoWindow(&show_demo_window);
+
+            if (ImGui::Button("Start Rendering")) {
+                render = true;
+            }
+
+            if (render) {
+                std::cout << "Start Rendering..." << std::endl;
+                start = std::chrono::system_clock::now();
+                // render scene
+                RenderImg();
+
+                end = std::chrono::system_clock::now();
+                auto time = std::chrono::duration<double>(end - start);
+                std::cout << "\nRender Finished in " << time << "s." << std::endl;
+
+            }
+
+            if (ImGui::Button("Write Image"))
+                write_img = true;
+            if (write_img)
+                WriteImg();
+            ImGui::End();
         }
 
-        if (render) {
-            std::cout << "Start Rendering..." << std::endl;
-            start = std::chrono::system_clock::now();
-            // render scene
-            RenderImg();
-
-            end = std::chrono::system_clock::now();
-            auto time = std::chrono::duration<double>(end - start);
-            std::cout << "\nRender Finished in " << time << "s." << std::endl;
-
-        }
-
-        if (ImGui::Button("Write Image"))
-            write_img = true;
-        if (write_img)
-            WriteImg();
 
 
         // Rendering
@@ -142,20 +143,17 @@ namespace VolumeRendering {
         glViewport(0, 0, display_w, display_h);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
+    void processInput(GLFWwindow *window)
+    {
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            glfwSetWindowShouldClose(window, true);
+
+    }
 
 }
 
-//#define TEST
-struct Local {
-    static inline void diff(const Vec3f &a, const Vec3f &b, Vec3f &result) {
-        result = a - b;
-    }
-};
 
-std::chrono::time_point<std::chrono::system_clock> start, end;
-std::chrono::duration<double> elapsed_seconds;
-
-
+/*
 void processInput(GLFWwindow *window, std::shared_ptr<Camera> camera) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -172,38 +170,24 @@ void processInput(GLFWwindow *window, std::shared_ptr<Camera> camera) {
         camera->ProcessKeyboard(Camera_Movement::UP, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
         camera->ProcessKeyboard(Camera_Movement::DOWN, deltaTime);
-}
+}*/
 
-void mouse_callback(GLFWwindow *window, double x, double y) {
-    if (firstMouse) {
-        lastX = x;
-        lastY = y;
-        firstMouse = false;
-    }
-
-    float xoffset = x - lastX;
-    float yoffset = lastY - y; // reversed since y-coordinates go from bottom to top
-
-    lastX = x;
-    lastY = y;
-
-
-}
 
 
 int main(int argc, char *argv[]) {
 
     VolumeRendering::LoadingConfig(argc, argv);
     VolumeRendering::InitSettings();
-
-
+    int WIDTH = VolumeRendering::config.image_resolution[0];
+    int HEIGHT = VolumeRendering::config.image_resolution[1];
 //GUI
     WindowGuard windowGuard(window, WIDTH, HEIGHT, "CG");
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
     IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
+    ImGui::CreateContext(); // Setup Dear ImGui context
     ImGuiIO &io = ImGui::GetIO();
-    (void) io;
+    (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
@@ -211,61 +195,31 @@ int main(int argc, char *argv[]) {
     const char *glsl_version = "#version 130";
     ImGui_ImplGlfw_InitForOpenGL(window, true); // Setup Platform/Renderer bindings
     ImGui_ImplOpenGL3_Init(glsl_version);
-#ifndef TEST
-    VolumeRendering::RenderImg();
-    VolumeRendering::WriteImg();
-#else
+
+
     while (!glfwWindowShouldClose(window)) {
-        //processInput(window);
+        VolumeRendering::processInput(window);
+        VolumeRendering::RenderOpenGL();
         VolumeRendering::RenderMainImGui();
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
 
-    // init integrator
-//    auto single_grid=loader.grids.grids[0];
-//    auto length=(loader.grids.whole_wbbox.max() - loader.grids.whole_wbbox.min())[loader.grids.whole_wbbox.maxExtent()];
-//    auto dim=single_grid->evalActiveVoxelBoundingBox().dim();
+#define TEST
+#ifndef TEST
+    VolumeRendering::RenderImg();
+    VolumeRendering::WriteImg();
 
 
+#else
 
 
-    //    loader.SortBydx();
-    //Construct ABR
-    //    std::vector<Cell> cells;
-
-
-    //    float MIN_DX=loader.grids[0]->metaValue<double>("dx");
-    //    WORLD_ORIGIN=loader.grids[0]->metaValue<double>("origin");
-
-        int grid_idx=0;
-        for (auto &grid: loader.grids.grids) {
-            //get meta data
-            for (auto iter = grid->beginMeta(); iter != grid->endMeta(); ++iter) {
-                const std::string &name = iter->first;
-                openvdb::Metadata::Ptr value = iter->second;
-                std::string valueAsString = value->str();
-                std::cout << name << " = " << valueAsString << std::endl;
-            }
-
-            //value iteration
-
-            auto origin=grid->metaValue<openvdb::Vec3d>("origin");
-            auto dx=grid->metaValue<double>("dx");
-            for(auto iter=grid->beginValueOn();iter;++iter) {
-                //check empty
-                if (!iter.isValueOn()) continue;
-                auto value = iter.getValue();
-    //            auto norm = iter->lengthSqr();
-                auto coord = iter.getCoord();
-                if(abs(value-0.066)>0.002)
-                cout<<grid_idx<<" "<<value<<" "<<iter.getCoord()<<" "<<grid->indexToWorld(iter.getCoord())<<endl;
-
-            }
-            grid_idx++;
-        }
 #endif
     return 0;
 }

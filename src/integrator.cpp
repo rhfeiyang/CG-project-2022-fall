@@ -84,6 +84,9 @@ Vec3f Integrator::color_transfer(float val)const {
     }*/
 
     for (int i = 0; i < colors.size(); ++i) {
+        // TODO 1、对于color前后0.005，即共0.01的区间内，都为这个点的颜色 i.e. 0.4 -> 0.35~0.45
+        // 2、对于两个区间之间的部分，进行插值，注意分母 i.e. 0.04&0.08 -> 0.045~0.075区间需要插值 -> 分母是0.075-0.045=0.03
+        // 3、对于小于最小点or大于最大点区间的部分，按照最小点or最大点
         if (i == 0 && val < points[i]) {
             return colors[i];
         } else if (points[i - 1] < val && val < points[i]) {

@@ -49,11 +49,13 @@ void Integrator::render() const {
 float Integrator::opacity_transfer(float value) const {
     //first for isovalue of iso-surface, second for value to be the opacity
     //using Gauss pdf
-    if (value > 0.2) {
-        return exp(-0.5 * (value - 5) * (value - 5) / (20 * 20));
+    if (0.000035 < value && value < 0.000065)
+        return 1;
+//    if (value > 0.2) {
+//        return exp(-0.5 * (value - 5) * (value - 5) / (20 * 20));
 //        float xu = value - 1.0;
 //        return 0.9 * exp(-0.5*xu*xu/(1.0*1.0));
-    }
+//    }
 //    if (0.05 < value && value < 1){
 //        float xu = value - 0.5;
 //        return 0.9 * exp(-0.5*xu*xu/(0.5*0.5));
@@ -68,33 +70,35 @@ float Integrator::opacity_correction(float actual_step, float opacity) {
 }
 
 Vec3f Integrator::color_transfer(float val) {
-//    float r = std::min(1.0, std::sqrt(val * val / 4.0));
-//    float g = std::max(0.0, std::sqrt(2 * val * (2.0 - val) / 4.0));
-//    float b = val > 2 ? 0 : std::sqrt((val - 2.0) * (val - 2.0) / 4.0);
-//    return {r, g, b};
-//    float r = std::max(1.0, val > 2 ? (val - 2) / 5.0 : 0);
-//    float b = std::max(1.0, val < 7 ? (7 - val) / 5.0 : 0);
-    if (val < 0.05) {
-        return {0,0,0};
+    Vec3f r = {1, 0.05, 0.05};
+    Vec3f g = {0.05, 1, 0.05};
+    Vec3f b = {0.05, 0.05, 1};
+    if (val < 0.01) {
+        return b;
     }
-    else if (val < 5) {
-        float r = std::sqrt((val) / 5.0);
-        float b = std::sqrt((5 - val) / 5.0);
-        return {r, 0.4, b};
+    else if (val < 0.03) {
+        return (0.03 - val) / 0.02 * b + (val - 0.01) / 0.02 * g;
+    }
+    else if (val < 0.04) {
+        return g;
+    }
+    else if (val < 0.06) {
+        return (0.06 - val) / 0.02 * g + (val - 0.04) / 0.02 * r;
     }
     else {
-        return {1, 0.4, 0};
+        return r;
     }
 }
 
-inline float sample(float dx, const FloatGrid &grid, const Vec3f &pos) {
+inline Vec2f sample(float dx, const Vec3sGrid &grid, const Vec3f &pos) {
     const Vec3i inIdx = floorVec3(grid.worldToIndex(pos));
     const Vec3f cell_pos = grid.indexToWorld(inIdx);
 //    auto ijk = Coord(inIdx);
     const auto &inTree = grid.tree();
     float sum_weights = 0;
-    float sum_weightedValues = 0;
-    float temp_val;
+    float sum_weightednorm = 0;
+    float sum_weightedq = 0;
+    Vec3f temp_val;
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
             for (int k = 0; k < 2; k++) {
@@ -106,19 +110,20 @@ inline float sample(float dx, const FloatGrid &grid, const Vec3f &pos) {
                                   * std::max(0.0, 1.0 - abs(C_p[1] - pos[1]) / dx)
                                   * std::max(0.0, 1.0 - abs(C_p[2] - pos[2]) / dx);
                     sum_weights += H_hat;
-                    sum_weightedValues += H_hat * temp_val;
+                    sum_weightednorm += H_hat * temp_val[0];
+                    sum_weightedq += H_hat * temp_val[1];
                 }
             }
         }
     }
-    return sum_weightedValues / sum_weights;
+    return {sum_weightednorm / sum_weights, sum_weightedq / sum_weights};
 }
 
-inline Vec3f gradient(float dx, const FloatGrid &grid, const Vec3f &pos) {
+inline Vec3f gradient(float dx, const Vec3sGrid &grid, const Vec3f &pos) {
     const Vec3i inIdx = floorVec3(grid.worldToIndex(pos));
     const Vec3f cell_pos = grid.indexToWorld(inIdx);
     const auto &inTree = grid.tree();
-    float temp_val;
+    Vec3f temp_val;
     Vec3f grad(0,0,0);
     for (int axis = 0; axis < 3; axis++) {
         // For gradient on each direction (dx, dy, dz)
@@ -137,7 +142,7 @@ inline Vec3f gradient(float dx, const FloatGrid &grid, const Vec3f &pos) {
                                       (float) std::max(0.0, 1.0 - abs(C_p[2] - pos[2]) / dx)};
                         float H_hat = h[0] * h[1] * h[2];
                         sum_weights += H_hat;
-                        sum_weightedValues += H_hat * temp_val;
+                        sum_weightedValues += H_hat * temp_val[1];
                         float X_t = C_p[axis] < pos[axis] ? 1 : -1;
                         sum_dH_dxyz += H_hat / h[axis] * X_t / dx;
                     }
@@ -150,11 +155,9 @@ inline Vec3f gradient(float dx, const FloatGrid &grid, const Vec3f &pos) {
 }
 
 
-float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm, int& finest_grid) const {
+Vec2f Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm, int& finest_grid) const {
 //    //TODO
-    float result = 0;
-    int cnt = 0;
-//    for(auto i:grid_idx){
+    Vec2f result = {0, 0};
     for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
         if (grid_idx_bm & 1) {
             auto grid = gridsData.grids[i];
@@ -162,8 +165,8 @@ float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm, int& finest_gri
 //            openvdb::tools::GridSampler
 //            <FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor, grid->transform());
 //            float temp_val=sampler.wsSample(pos);
-            float temp_val = sample((float)gridsData.dx[i], *grid, pos);
-            if(temp_val < 100){
+            Vec2f temp_val = sample((float)gridsData.dx[i], *grid, pos);
+            if(temp_val[0] < 100) {
                 result = temp_val;
                 finest_grid=i;
             }
@@ -255,11 +258,10 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
             }
             interaction.dist-=actual_step;
         }
-        int finest_grid_idx;
-        auto temp_val = interpolation(sample_pos, contribute_grids_bm,finest_grid_idx);
-        auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val));
-
-        result += T * opacity * color_transfer(temp_val);
+        auto temp_val = interpolation(sample_pos, contribute_grids_bm);
+        // temp = {norm, q};
+        auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val[1]));
+        result += T * opacity * color_transfer(temp_val[0]);
         T *= (1.0f - opacity);
 
         ray.origin = next_pos;
@@ -272,8 +274,6 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
 
     return result;
 }
-
-
 
 
 

@@ -1,9 +1,9 @@
 
 #include "VDBLoader.h"
 
-float VDBLoader::q_criterion(const Vec3sGrid &grid, const Coord &coord, const iBBox &ibbox) {
-    auto dx = grid.metaValue<double>("dx");
-//    dx=0.008;
+inline float VDBLoader::q_criterion(const Vec3sGrid &grid, const Coord &coord, const iBBox &ibbox) {
+//    auto dx = grid.metaValue<double>("dx");
+    float dx = 0.008;
     auto max_coord = ibbox.max();
     auto acc_grid = grid.getAccessor();
     Coord dx_coord{1, 0, 0};
@@ -14,35 +14,35 @@ float VDBLoader::q_criterion(const Vec3sGrid &grid, const Coord &coord, const iB
     // grad_x
     if (coord[0] == 0) {
         gx = (acc_grid.getValue(coord + dx_coord) -
-              acc_grid.getValue(coord)) / dx;
+              acc_grid.getValue(coord));
     } else if (coord[0] == max_coord[0]) {
         gx = (acc_grid.getValue(coord) -
-              acc_grid.getValue(coord - dx_coord)) / dx;
+              acc_grid.getValue(coord - dx_coord));
     } else {
         gx = (acc_grid.getValue(coord + dx_coord) -
-              acc_grid.getValue(coord - dx_coord)) / (2 * dx);
+              acc_grid.getValue(coord - dx_coord)) / 2.0;
     }
     // grad_y
     if (coord[1] == 0) {
         gy = (acc_grid.getValue(coord + dy_coord) -
-              acc_grid.getValue(coord)) / dx;
+              acc_grid.getValue(coord));
     } else if (coord[1] == max_coord[1]) {
         gy = (acc_grid.getValue(coord) -
-              acc_grid.getValue(coord - dy_coord)) / dx;
+              acc_grid.getValue(coord - dy_coord));
     } else {
         gy = (acc_grid.getValue(coord + dy_coord) -
-              acc_grid.getValue(coord - dy_coord)) / (2 * dx);
+              acc_grid.getValue(coord - dy_coord)) / 2.0;
     }
     // grad_z
     if (coord[2] == 0) {
         gz = (acc_grid.getValue(coord + dz_coord) -
-              acc_grid.getValue(coord)) / dx;
+              acc_grid.getValue(coord));
     } else if (coord[2] == max_coord[2]) {
         gz = (acc_grid.getValue(coord) -
-              acc_grid.getValue(coord - dz_coord)) / dx;
+              acc_grid.getValue(coord - dz_coord));
     } else {
         gz = (acc_grid.getValue(coord + dz_coord) -
-              acc_grid.getValue(coord - dz_coord)) / (2 * dx);
+              acc_grid.getValue(coord - dz_coord)) / 2.0;
     }
     return -0.5f * (gx.x() * gx.x() + gy.y() * gy.y() + gz.z() * gz.z())
            - gx.y() * gy.x() - gx.z() * gz.x() - gy.z() * gz.y();
@@ -96,14 +96,16 @@ void VDBLoader::load(const std::string &_filename) {
         //convert base to grid type
         auto grid = openvdb::gridPtrCast<Vec3sGrid>(baseGrid);
         openvdb::tools::changeBackground(grid->tree(), (Vec3f) 1e30);
-        FloatGrid::Ptr floatgrid = FloatGrid::create(1e30);
+        Vec3sGrid::Ptr norm_q_grid = Vec3sGrid::create({1e30, 1e30, 0});
 
-        auto accessor = floatgrid->getAccessor();
+        auto accessor = norm_q_grid->getAccessor();
 
         auto grid_ibbox = grid->evalActiveVoxelBoundingBox();
         for (auto ite = grid->beginValueOn(); ite; ++ite) {
             auto coord = ite.getCoord();
-            accessor.setValue(coord, q_criterion(*grid, coord, grid_ibbox));
+            auto norm = ite.getValue().length();
+            auto q = q_criterion(*grid, coord, grid_ibbox);
+            accessor.setValue(coord, {norm, q, 0});
             accessor.setActiveState(coord, ite.isValueOn());
         }
 //        for(auto ite=floatgrid->beginValueAll();ite;++ite) {
@@ -112,10 +114,10 @@ void VDBLoader::load(const std::string &_filename) {
         for (auto ite = grid->beginMeta(); ite != grid->endMeta(); ++ite) {
             auto name = ite->first;
             auto value = (ite->second)->copy();
-            floatgrid->insertMeta(name, *value);
+            norm_q_grid->insertMeta(name, *value);
         }
-        floatgrid->setTransform(grid->transformPtr());
-        grids.addGrid(floatgrid, grid_ibbox);
+        norm_q_grid->setTransform(grid->transformPtr());
+        grids.addGrid(norm_q_grid, grid_ibbox);
 //        for(auto ite=floatgrid->beginValueAll();ite;++ite){
 //            if (!ite.isValueOn() && ite.getValue() > 1) cout << floatgrid->indexToWorld(ite.getCoord()) << "\t" << ite.getValue() << endl;
 //        }

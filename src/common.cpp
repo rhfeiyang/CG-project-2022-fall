@@ -22,11 +22,11 @@ std::string GetFilePath(const std::string& target, int depth/* = 5*/) {
     abort();
 }
 
-void Grids_data::addGrid(const FloatGrid::Ptr& grid) {
+void Grids_data::addGrid(const Vec3sGrid::Ptr& grid) {
     addGrid(grid,grid->evalActiveVoxelBoundingBox());
 }
 
-void Grids_data::addGrid(const FloatGrid::Ptr& grid,const iBBox &ibbox) {
+void Grids_data::addGrid(const Vec3sGrid ::Ptr& grid,const iBBox &ibbox) {
     grids.push_back(grid);
     auto dx_temp=grid->metaValue<double>("dx");
 
@@ -42,7 +42,7 @@ bool floatEqual(const float& first,const float& second){
     return abs(first-second)<EPS;
 }
 
-wBBox ibbTowbb(const FloatGrid::Ptr & grid,const iBBox& ibb){
+wBBox ibbTowbb(const Vec3sGrid::Ptr & grid,const iBBox& ibb){
     auto lb=grid->indexToWorld(ibb.min());
     auto rt=grid->indexToWorld(ibb.max());
     return {lb,rt};

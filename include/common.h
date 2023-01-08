@@ -73,9 +73,9 @@ using gMat4 = glm::mat<4, 4, Float, glm::defaultp>;
 std::string GetFilePath(const std::string& target, int depth = 5);
 
 struct Grids_data{
-    void addGrid(const FloatGrid::Ptr& grid,const iBBox& ibbox);
-    void addGrid(const FloatGrid::Ptr& grid);
-    std::vector<FloatGrid::Ptr> grids;
+    void addGrid(const Vec3sGrid::Ptr& grid,const iBBox& ibbox);
+    void addGrid(const Vec3sGrid::Ptr& grid);
+    std::vector<Vec3sGrid::Ptr> grids;
     std::vector<double> dx;
     double max_dx=std::numeric_limits<double>::min();
     double min_dx=std::numeric_limits<double>::max();
@@ -85,7 +85,7 @@ struct Grids_data{
 };
 
 bool floatEqual(const float& first,const float& second);
-wBBox ibbTowbb(const FloatGrid::Ptr & grid,const iBBox& ibb);
+wBBox ibbTowbb(const Vec3sGrid::Ptr & grid,const iBBox& ibb);
 
 //Mat4f Mat4g2v(glm::)
 #endif //CG_PROJECT_2022_FALL_COMMON_H

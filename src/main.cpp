@@ -104,7 +104,7 @@ namespace VolumeRendering {
 
     void WriteImg() {
         rendered_img->writeImgToFile("../result.png");
-        std::cout << "Image saved to disk." << std::endl;
+        std::cout << "\nImage saved to disk." << std::endl;
         write_img = false;
     }
 

@@ -29,9 +29,9 @@
   "objects": [
   {
     "path": "../resource/sphere.obj",
-    "material_name" : "red_diffuse",
+    "material_name" : "blue_diffuse",
     "position": [5,2,3],
-    "scale": 1.33333,
+    "scale": 1.33333333,
     "has_bvh" : true
   }
     ],

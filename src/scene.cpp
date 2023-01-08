@@ -17,17 +17,17 @@ void Scene::setLight(const std::shared_ptr<Light> &new_light) {
 //  return intersect(shadow_ray, in) && in.type == Interaction::Type::GEOMETRY;
 //}
 //
-//bool Scene::intersect(Ray &ray, Interaction &interaction) {
+bool Scene::intersect(Ray &ray, Interaction &interaction) {
 //  light->intersect(ray, interaction);
-//  for (const auto& obj: objects) {
-//    Interaction cur_it;
-//    if (obj->intersect(ray, cur_it) && (cur_it.dist < interaction.dist)) {
-//      interaction = cur_it;
-//    }
-//  }
-//  return interaction.type != Interaction::Type::NONE;
-//}
-//
+  for (const auto& obj: objects) {
+    Interaction cur_it;
+    if (obj->intersect(ray, cur_it) && (cur_it.dist < interaction.dist)) {
+      interaction = cur_it;
+    }
+  }
+  return interaction.type != Interaction::Type::NONE;
+}
+
 const std::shared_ptr<Light> &Scene::getLight() const {
   return light;
 }
@@ -49,6 +49,7 @@ void initSceneFromConfig(const Config &config, std::shared_ptr<Scene> &scene) {
   for (auto &object: config.objects) {
     auto mesh_obj = makeMeshObject(object.path, Vec3f(object.position),object.scale);
 //    mesh_obj->setMaterial(mat_list[object.material_name]);
+    mesh_obj->setColor(mat_list[object.material_name]);
       if (object.has_bvh) {
           mesh_obj->buildBVH();
       }

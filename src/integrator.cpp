@@ -199,12 +199,19 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     float step_base = step_Base(ray.origin, contribute_grids_bm);
     auto actual_step = step_base * step_scale;
     ray.origin = interleaved_sampling(actual_step * ray.direction, ray.origin) - EPS;
-
-
+    Interaction interaction;
+    bool path_has_obj= true;
+    if(! scene->intersect(ray,interaction)) path_has_obj= false;
     while (T > 0.05 && limit > 0) {
         auto next_pos = ray(actual_step);
         auto sample_pos = (ray.origin + next_pos) / 2;
-
+        if(path_has_obj){
+            if(interaction.dist<actual_step/2){
+                result+=T*interaction.color;
+                break;
+            }
+            interaction.dist-=actual_step;
+        }
         auto temp_val = interpolation(sample_pos, contribute_grids_bm);
         auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val));
 

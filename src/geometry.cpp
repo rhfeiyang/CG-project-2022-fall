@@ -31,6 +31,9 @@ bool TriangleMesh::intersect(Ray &ray, Interaction &interaction) const {
 //void TriangleMesh::setMaterial(std::shared_ptr<BSDF> &new_bsdf) {
 //  bsdf = new_bsdf;
 //}
+void TriangleMesh::setColor(Vec3f& mcolor){
+    color=mcolor;
+}
 
 bool TriangleMesh::intersectOneTriangle(Ray &ray,
                                         Interaction &interaction,
@@ -61,6 +64,7 @@ bool TriangleMesh::intersectOneTriangle(Ray &ray,
       + (1 - u - v) * normals[n_idx[0]]);
   interaction.normal.normalize();
 //  interaction.material = bsdf;
+    interaction.color=color;
   interaction.type = Interaction::Type::GEOMETRY;
   return true;
 }

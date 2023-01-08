@@ -158,7 +158,6 @@ int main(int argc, char *argv[]) {
 //        glfwPollEvents();
 //    }
 
-
 #ifndef TEST
     // init integrator
 //    auto single_grid=loader.grids.grids[0];

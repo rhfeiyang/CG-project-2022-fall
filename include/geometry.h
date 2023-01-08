@@ -15,6 +15,7 @@ class TriangleMesh {
                std::vector<int> n_index);
   bool intersect(Ray &ray, Interaction &interaction) const;
 //  void setMaterial(std::shared_ptr<BSDF> &new_bsdf);
+    void setColor(Vec3f&);
   void buildBVH();
 //  BVHNode* build_BVH_recur(std::vector<Triangle>& meshes,int start, int end);
 //  int find_axis_ran(std::vector<Triangle>& meshes, int start, int end, float x_ran[2],float y_ran[2], float z_ran[2]);
@@ -264,7 +265,7 @@ class TriangleMesh {
               Ray &ray) const;
 //  std::shared_ptr<BSDF> bsdf;
   BVHNode* bvh;
-
+    Vec3f color;
   std::vector<Vec3f> vertices;
   std::vector<Vec3f> normals;
   std::vector<int> v_indices;

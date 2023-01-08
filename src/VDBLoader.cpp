@@ -2,7 +2,7 @@
 #include "VDBLoader.h"
 float VDBLoader::q_criterion(const Vec3sGrid& grid,const Coord& coord,const iBBox& ibbox){
     auto dx = grid.metaValue<double>("dx");
-    dx=0.008;
+//    dx=0.008;
     auto max_coord=ibbox.max();
     auto acc_grid=grid.getAccessor();
     Coord dx_coord{1, 0, 0};Coord dy_coord{0, 1, 0};Coord dz_coord{0, 0, 1};
@@ -88,7 +88,7 @@ VDBLoader::VDBLoader(const std::string& filename) : filename(filename) {
 //        grids_base.push_back(baseGrid);
         auto type = baseGrid->type();
         cout << gridName << endl;
-        assert(type == GridType::gridType());
+//        assert(type == GridType::gridType());
         //convert base to grid type
         auto grid = openvdb::gridPtrCast<Vec3sGrid>(baseGrid);
         openvdb::tools::changeBackground(grid->tree(), (Vec3f) 1e30);

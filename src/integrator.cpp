@@ -49,19 +49,13 @@ void Integrator::render() const {
 float Integrator::opacity_transfer(float value) const {
     //first for isovalue of iso-surface, second for value to be the opacity
     //using Gauss pdf
-    if (0.000035 < value && value < 0.000065)
-        return 1;
-//    if (value > 0.2) {
-//        return exp(-0.5 * (value - 5) * (value - 5) / (20 * 20));
-//        float xu = value - 1.0;
-//        return 0.9 * exp(-0.5*xu*xu/(1.0*1.0));
-//    }
-//    if (0.05 < value && value < 1){
-//        float xu = value - 0.5;
-//        return 0.9 * exp(-0.5*xu*xu/(0.5*0.5));
-//    }
 
-//    if (value > 0.75) return 1;
+    if (0.01 < value && value < 0.02) {
+        // 0.001 - 0.01: Gauss
+        // 0.01 - 0.02: 1
+        // 0.02 - 0.03: Gauss
+        return std::min(1.0, 1.6 * exp(-0.5 * (value - 0.015) * (value - 0.015) / (0.005 * 0.005)));
+    }
     return 0;
 }
 
@@ -70,20 +64,20 @@ float Integrator::opacity_correction(float actual_step, float opacity) {
 }
 
 Vec3f Integrator::color_transfer(float val) {
-    Vec3f r = {1, 0.05, 0.05};
-    Vec3f g = {0.05, 1, 0.05};
-    Vec3f b = {0.05, 0.05, 1};
+    Vec3f r = Vec3f{1, 0.05, 0.05} * 0.8;
+    Vec3f g = Vec3f{0.05, 1, 0.05} * 0.8;
+    Vec3f b = Vec3f{0.05, 0.05, 1} * 0.8;
     if (val < 0.01) {
         return b;
     }
-    else if (val < 0.03) {
-        return (0.03 - val) / 0.02 * b + (val - 0.01) / 0.02 * g;
+    else if (val < 0.035) {
+        return (0.035 - val) / 0.02 * b + (val - 0.01) / 0.025 * g;
     }
-    else if (val < 0.04) {
+    else if (val < 0.045) {
         return g;
     }
-    else if (val < 0.06) {
-        return (0.06 - val) / 0.02 * g + (val - 0.04) / 0.02 * r;
+    else if (val < 0.07) {
+        return (0.07 - val) / 0.02 * g + (val - 0.045) / 0.025 * r;
     }
     else {
         return r;
@@ -253,7 +247,6 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     while (T > 0.05 && limit > 0) {
         auto next_pos = ray(actual_step);
         auto sample_pos = (ray.origin + next_pos) / 2;
-        contribute_grids_bm = kdtree.grid_contribute(sample_pos);
         if(path_has_obj){
             if(interaction.dist<actual_step + EPS){
                 result+=T* phoneLighting(interaction);
@@ -261,7 +254,8 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
             }
             interaction.dist-=actual_step;
         }
-        int finest_grid_idx;
+        contribute_grids_bm = kdtree.grid_contribute(sample_pos);
+        int finest_grid_idx = gridsData.grids.size()-1;
         auto temp_val = interpolation(sample_pos, contribute_grids_bm,finest_grid_idx);
         // temp = {norm, q};
         auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val[1]));

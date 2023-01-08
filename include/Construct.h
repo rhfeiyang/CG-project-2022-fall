@@ -16,6 +16,9 @@ struct Pos{
     bool operator< (const Pos& other) const{
         return pos<other.pos;
     }
+    bool operator> (const Pos& other) const{
+        return !(*this < other);
+    }
 };
 
 class Kdtree;

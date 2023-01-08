@@ -17,16 +17,17 @@ public:
 
     [[nodiscard]] static Vec3f color_transfer(float val) ;
 
-    [[nodiscard]] float interpolation(Vec3f pos, uint32_t grid_idx_bm) const;
+    [[nodiscard]] float interpolation(Vec3f pos, int finest_grid_idx) const;
 
     static float opacity_correction(float actual_step, float opacity);
 
     Vec3f front_to_back(Ray &ray) const;
 
-    [[nodiscard]] float step_Base(Vec3f pos, uint32_t grid_idx_bm) const;
+    [[nodiscard]] float step_Base(Vec3f pos, int finest_grid_idx) const;
 
     Vec3f phoneLighting(Interaction& inter) const;
 
+    static int finestContriGrid(uint32_t grid_idx_bm);
 private:
     std::shared_ptr<Camera> camera;
     std::shared_ptr<Scene> scene;

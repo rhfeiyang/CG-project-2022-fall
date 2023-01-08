@@ -150,47 +150,57 @@ inline Vec3f gradient(float dx, const FloatGrid &grid, const Vec3f &pos) {
 }
 
 
-float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm) const {
+float Integrator::interpolation(Vec3f pos, int finest_grid_idx) const {
 //    //TODO
-    float result = 0;
-    int cnt = 0;
-//    for(auto i:grid_idx){
-    for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
-        if (grid_idx_bm & 1) {
-            auto grid = gridsData.grids[i];
-//            FloatGrid::ConstAccessor accessor = grid->getConstAccessor();
-//            openvdb::tools::GridSampler
-//            <FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor, grid->transform());
-//            float temp_val=sampler.wsSample(pos);
-            float temp_val = sample((float)gridsData.dx[i], *grid, pos);
-            if(temp_val < 100)
-                result = temp_val;
-//            float value = sample((float) gridsData.dx[i], *grid, pos);
-//            if (value < 1) {
-//                result += value;
-//                cnt++;
-//            }
-        }
-    }
-//    result /= float(cnt);
-    return result;
+    float temp_val= sample((float)gridsData.dx[finest_grid_idx], *gridsData.grids[finest_grid_idx], pos);
+    return temp_val<100? temp_val:0;
+//    float result = 0;
+//    int cnt = 0;
+////    for(auto i:grid_idx){
+//    for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
+//        if (grid_idx_bm & 1) {
+//            auto grid = gridsData.grids[i];
+////            FloatGrid::ConstAccessor accessor = grid->getConstAccessor();
+////            openvdb::tools::GridSampler
+////            <FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor, grid->transform());
+////            float temp_val=sampler.wsSample(pos);
+//            float temp_val = sample((float)gridsData.dx[i], *grid, pos);
+//            if(temp_val < 100)
+//                result = temp_val;
+////            float value = sample((float) gridsData.dx[i], *grid, pos);
+////            if (value < 1) {
+////                result += value;
+////                cnt++;
+////            }
+//        }
+//    }
+////    result /= float(cnt);
 }
 
-float Integrator::step_Base(Vec3f pos, uint32_t grid_idx_bm) const {
-    float step = std::numeric_limits<float>::max();
-//    for(auto i:grid_idx){
-    for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
-        if (grid_idx_bm & 1) {
-            step = std::min(step, float(gridsData.grids[i]->metaValue<double>("dx")));
-        }
-    }
-    return step;
+float Integrator::step_Base(Vec3f pos, int finest_grid_idx) const {
+//    float step = std::numeric_limits<float>::max();
+////    for(auto i:grid_idx){
+//    for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
+//        if (grid_idx_bm & 1) {
+//            step = std::min(step, float(gridsData.grids[i]->metaValue<double>("dx")));
+//        }
+//    }
+    return gridsData.grids[finest_grid_idx]->metaValue<double>("dx");
 }
 
 Vec3f interleaved_sampling(Vec3f dt, Vec3f t0) {
     Sampler sampler;
     auto rho = sampler.get1D();
     return dt * (Vec3f(rho) + ceilVec3((t0 + rho * dt) / dt));
+}
+
+int Integrator::finestContriGrid(uint32_t grid_idx_bm) {
+    int min;
+    for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
+        if (grid_idx_bm & 1)
+            min = i;
+    }
+    return min;
 }
 
 Vec3f Integrator::phoneLighting(Interaction &interaction) const {
@@ -231,7 +241,8 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     auto limit = t_range[1] - t_range[0];
     ray.origin = ray(t_range[0] + EPS);
     auto contribute_grids_bm = kdtree.grid_contribute(ray.origin);
-    float step_base = step_Base(ray.origin, contribute_grids_bm);
+    auto finest_contri_grid= finestContriGrid(contribute_grids_bm);
+    float step_base = step_Base(ray.origin, finest_contri_grid);
     auto actual_step = step_base * step_scale;
     ray.origin = interleaved_sampling(actual_step * ray.direction, ray.origin) - EPS;
     Interaction interaction;
@@ -248,9 +259,11 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
             }
             interaction.dist-=actual_step;
         }
-        auto temp_val = interpolation(sample_pos, contribute_grids_bm);
+
+        auto temp_val = interpolation(sample_pos, finest_contri_grid);
         auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val));
 
+//        auto grad= gradient(step_base,)
         result += T * opacity * color_transfer(temp_val);
         T *= (1.0f - opacity);
 
@@ -258,13 +271,16 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
         limit -= actual_step;
 
         contribute_grids_bm = kdtree.grid_contribute(ray.origin);
-        step_base = step_Base(ray.origin, contribute_grids_bm);
+        finest_contri_grid= finestContriGrid(contribute_grids_bm);
+        step_base = step_Base(ray.origin, finest_contri_grid);
         actual_step = step_base * step_scale;
 //        cout<<result<<endl;
     }
 
     return result;
 }
+
+
 
 
 

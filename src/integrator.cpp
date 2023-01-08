@@ -51,8 +51,8 @@ void Integrator::render() const {
 float Integrator::opacity_transfer(float value) const {
     //first for isovalue of iso-surface, second for value to be the opacity
     //using Gauss pdf
-    if (value > 0.01) {
-        return 0.6;
+    if (value > 0.2) {
+        return exp(-0.5 * (value - 5) * (value - 5) / (20 * 20));
 //        float xu = value - 1.0;
 //        return 0.9 * exp(-0.5*xu*xu/(1.0*1.0));
     }
@@ -70,10 +70,23 @@ float Integrator::opacity_correction(float actual_step, float opacity) {
 }
 
 Vec3f Integrator::color_transfer(float val) {
-    float r = std::min(1.0, std::sqrt(val * val / 4.0));
-    float g = std::max(0.0, std::sqrt(2 * val * (2.0 - val) / 4.0));
-    float b = std::max(0.0, std::sqrt((val - 2.0) * (val - 2.0) / 4.0));
-    return {r, g, b};
+//    float r = std::min(1.0, std::sqrt(val * val / 4.0));
+//    float g = std::max(0.0, std::sqrt(2 * val * (2.0 - val) / 4.0));
+//    float b = val > 2 ? 0 : std::sqrt((val - 2.0) * (val - 2.0) / 4.0);
+//    return {r, g, b};
+//    float r = std::max(1.0, val > 2 ? (val - 2) / 5.0 : 0);
+//    float b = std::max(1.0, val < 7 ? (7 - val) / 5.0 : 0);
+    if (val < 0.05) {
+        return {0,0,0};
+    }
+    else if (val < 5) {
+        float r = std::sqrt((val) / 5.0);
+        float b = std::sqrt((5 - val) / 5.0);
+        return {r, 0.4, b};
+    }
+    else {
+        return {1, 0.4, 0};
+    }
 }
 
 inline float sample(float dx, const FloatGrid &grid, const Vec3f &pos) {
@@ -182,6 +195,30 @@ Vec3f interleaved_sampling(Vec3f dt, Vec3f t0) {
     return dt * (Vec3f(rho) + ceilVec3((t0 + rho * dt) / dt));
 }
 
+Vec3f Integrator::phoneLighting(Interaction &interaction) const {
+    Vec3f radiance(0, 0, 0);
+    auto & light=scene->getLight();
+
+    Vec3f diffuse={0.0f,0.0f,0.0f};
+    Vec3f specular={0.0f,0.0f,0.0f};
+    Vec3f ambient=scene->getAmbient()*interaction.color;
+
+    auto light_dir=(light->position-interaction.pos).unit();
+    Ray ray{interaction.pos,light_dir};
+    if(!scene->isShadowed(ray)) {
+        //diffuse
+        diffuse+=Vec3f (std::max(light_dir.dot(interaction.normal),0.0f));
+        //specular
+        auto reflectdir=2*(light_dir.dot(interaction.normal))*interaction.normal-light_dir;
+        auto viewdir=(camera->getPosition()-interaction.pos).unit();
+        specular+=Vec3f(pow(std::max(double(viewdir.dot(reflectdir)), 0.0),16.0));
+    }
+    diffuse=diffuse*interaction.color;
+    specular=specular*interaction.color;
+//    cout<<diffuse<<" "<<specular<<" "<<ambient<<endl;
+    radiance=(diffuse+specular)*(light->emission(ray.origin,ray.direction))+ambient;
+    return radiance;
+}
 
 Vec3f Integrator::front_to_back(Ray &ray) const {
     auto grid = gridsData.grids[0];
@@ -202,12 +239,13 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     Interaction interaction;
     bool path_has_obj= true;
     if(! scene->intersect(ray,interaction)) path_has_obj= false;
+
     while (T > 0.05 && limit > 0) {
         auto next_pos = ray(actual_step);
         auto sample_pos = (ray.origin + next_pos) / 2;
         if(path_has_obj){
             if(interaction.dist<actual_step/2){
-                result+=T*interaction.color;
+                result+=T* phoneLighting(interaction);
                 break;
             }
             interaction.dist-=actual_step;
@@ -229,7 +267,6 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
 
     return result;
 }
-
 
 
 

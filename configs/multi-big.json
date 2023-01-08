@@ -8,9 +8,13 @@
     "vertical_fov": 45,
     "focal_length" : 1
   },
+  "light_config" : {
+    "position": [4.5,-5,5],
+    "radiance" : [1,1,1]
+  },
   "materials" : [
     {
-      "color" : [0.725, 0.71, 0.68],
+      "color" : [0.06, 0.06, 0.6],
       "name" : "grey_diffuse"
     },
     {
@@ -22,7 +26,7 @@
       "name" : "red_diffuse"
     },
     {
-      "color" : [0,0, 0.7],
+      "color" : [0.2,0.4, 0.7],
       "name" : "blue_diffuse"
     }
   ],

@@ -137,6 +137,7 @@ int main(int argc, char *argv[]) {
     // construct scene.
     auto scene = std::make_shared<Scene>();
     initSceneFromConfig(config, scene);
+    scene->setAmbient(Vec3f(0.1, 0.1, 0.1));
 //load vdb
     VDBLoader loader(GetFilePath(config.file_path));
 

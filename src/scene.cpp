@@ -7,7 +7,10 @@
 void Scene::addObject(std::shared_ptr<TriangleMesh> &mesh) {
   objects.push_back(mesh);
 }
-
+bool Scene::isShadowed(Ray& shadow_ray) {
+    Interaction in;
+    return intersect(shadow_ray, in) && in.type == Interaction::Type::GEOMETRY;
+}
 void Scene::setLight(const std::shared_ptr<Light> &new_light) {
   light = new_light;
 }
@@ -31,6 +34,15 @@ bool Scene::intersect(Ray &ray, Interaction &interaction) {
 const std::shared_ptr<Light> &Scene::getLight() const {
   return light;
 }
+
+void Scene::setAmbient(Vec3f ambient) {
+    ambient_light = ambient;
+}
+
+const Vec3f &Scene::getAmbient() const {
+    return ambient_light;
+}
+
 //
 void initSceneFromConfig(const Config &config, std::shared_ptr<Scene> &scene) {
 //  // add square light to scene.
@@ -38,6 +50,9 @@ void initSceneFromConfig(const Config &config, std::shared_ptr<Scene> &scene) {
 //                                                                   Vec3f(config.light_config.radiance),
 //                                                                   Vec2f(config.light_config.size));
 //  scene->setLight(light);
+  std::shared_ptr<Light> light = std::make_shared<PointLight>(Vec3f(config.light_config.position),
+                                                                   Vec3f(config.light_config.radiance));
+  scene->setLight(light);
 //  // init all materials.
   std::map<std::string,Vec3f> mat_list;
   for (const auto &mat: config.materials) {

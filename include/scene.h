@@ -10,18 +10,28 @@
 //#include "config.h"
 
 class Scene {
- public:
-  Scene() = default;
+public:
+    Scene() = default;
+
 //    void loadDataFromFile(const std::string &path);
-  void addObject(std::shared_ptr<TriangleMesh> &geometry);
+    void addObject(std::shared_ptr<TriangleMesh> &geometry);
+
 //  [[nodiscard]] const std::shared_ptr<Light> &getLight() const;
-  void setLight(const std::shared_ptr<Light> &new_light);
-  const std::shared_ptr<Light> &getLight() const;
-//  bool isShadowed(Ray &shadow_ray);
-  bool intersect(Ray &ray, Interaction &interaction);
- private:
-  std::vector<std::shared_ptr<TriangleMesh>> objects;
-  std::shared_ptr<Light> light;
+    void setLight(const std::shared_ptr<Light> &new_light);
+
+    void setAmbient(Vec3f ambient);
+
+    [[nodiscard]] const std::shared_ptr<Light> &getLight() const;
+
+    [[nodiscard]]const Vec3f &getAmbient() const;
+
+    bool isShadowed(Ray &shadow_ray);
+    bool intersect(Ray &ray, Interaction &interaction);
+
+private:
+    std::vector<std::shared_ptr<TriangleMesh>> objects;
+    std::shared_ptr<Light> light;
+    Vec3f ambient_light;
 };
 
 void initSceneFromConfig(const Config &config, std::shared_ptr<Scene> &scene);

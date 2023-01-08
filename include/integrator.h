@@ -25,6 +25,8 @@ public:
 
     [[nodiscard]] float step_Base(Vec3f pos, uint32_t grid_idx_bm) const;
 
+    Vec3f phoneLighting(Interaction& inter) const;
+
 private:
     std::shared_ptr<Camera> camera;
     std::shared_ptr<Scene> scene;

@@ -9,32 +9,41 @@
 class Integrator {
 public:
     Integrator(std::shared_ptr<Camera> cam,
-               std::shared_ptr<Scene> scene, int spp,Grids_data &gridsData,  float iso_value, float var=0.001, float step_scale=1);
+               std::shared_ptr<Scene> scene, int spp, Grids_data &gridsData, float iso_value, float var = 0.001,
+               float step_scale = 1);
 
     void render() const;
 
     [[nodiscard]] float opacity_transfer(float value) const;
 
-    [[nodiscard]] static Vec3f color_transfer(float val);
+    [[nodiscard]] Vec3f color_transfer(float val) const;
 
-    [[nodiscard]] Vec2f interpolation(Vec3f pos, uint32_t grid_idx_bm, int& finest_grid) const;
+    [[nodiscard]] Vec2f interpolation(Vec3f pos, uint32_t grid_idx_bm, int &finest_grid) const;
 
     static float opacity_correction(float actual_step, float opacity);
 
     Vec3f front_to_back(Ray &ray) const;
 
     [[nodiscard]] float step_Base(Vec3f pos, uint32_t grid_idx_bm) const;
-    [[nodiscard]] float step_Base(const int& finest_grid) const;
-    Vec3f phoneLighting(Interaction& inter) const;
-    void SetColors(std::vector<Vec3f> &c){
-        colors=c;
-    }
-    void SetPoints(std::vector<float> &p){
-        points=p;
+
+    [[nodiscard]] float step_Base(const int &finest_grid) const;
+
+    Vec3f phoneLighting(Interaction &inter) const;
+
+    void SetColors(std::vector<Vec3f> &c) {
+        colors = c;
     }
 
-    void setiso_value(float value){
-        iso_value=value;
+    void SetPoints(std::vector<float> &p) {
+        points = p;
+    }
+
+    void setiso_value(float value) {
+        iso_value = value;
+    }
+
+    void SetFilter(bool f) {
+        filter = f;
     }
 
 private:
@@ -51,6 +60,8 @@ private:
 
     std::vector<Vec3f> colors;
     std::vector<float> points;
+
+    bool filter;
 };
 
 #endif //INTEGRATOR_H_

@@ -30,7 +30,7 @@ namespace VolumeRendering {
 
     //render parameters
     float iso_value = 0.03;
-    Vec3f s_color{0.06,0.06,0.06};
+    Vec3f s_color{0.06, 0.06, 0.06};
     std::vector<Vec3f> colors;
     std::vector<float> points;
 
@@ -38,6 +38,7 @@ namespace VolumeRendering {
     bool show_demo_window = false;
     bool render = false;
     bool write_img = false;
+    bool filter=false;
 
     void LoadingConfig(int argc, char *argv[]) {
         /// load config from json file
@@ -93,11 +94,11 @@ namespace VolumeRendering {
         glDrawPixels(res[0], res[1], GL_RGB, GL_UNSIGNED_BYTE, img->getdata());
     }
 
-    void RenderInit(){
+    void RenderInit() {
         integrator = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids, config.iso_value, config.var,
                                                   config.step_scale);
         //inti color table
-        colors.push_back( {0.05, 0.05, 1});
+        colors.push_back({0.05, 0.05, 1});
         colors.push_back({0.05, 1, 0.05});
         colors.push_back({1, 0.05, 0.05});
         points.push_back(0.01);
@@ -107,6 +108,7 @@ namespace VolumeRendering {
         integrator->SetPoints(points);
 
     }
+
     void RenderImg() {
         integrator->render();
         render = false;
@@ -131,7 +133,8 @@ namespace VolumeRendering {
         {
             ImGui::Begin("Volume Rendering");
             ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-
+            ImGui::Checkbox("Sphere Filter",&filter);
+            integrator->SetFilter(filter);
             if (ImGui::TreeNode("Render settings")) {
                 ImGui::SliderFloat("iso-value", &iso_value, 0, 1);
                 integrator->setiso_value(iso_value);
@@ -140,9 +143,7 @@ namespace VolumeRendering {
                 ImGui::Text("Colors");
 
                 //line with point
-                ImGui::PlotLines("Curve",points.data(),points.size(),0,NULL,0.0f,1.0f,ImVec2(0, 80.0f));
-
-
+                ImGui::PlotLines("Curve", points.data(), points.size(), 0, NULL, 0.0f, 1.0f, ImVec2(0, 80.0f));
 
                 //add color
                 if (ImGui::Button("Add")) {
@@ -160,7 +161,7 @@ namespace VolumeRendering {
 
                     for (int i = 0; i < colors.size(); ++i) {
                         char label[128];
-                        sprintf(label, "MyObject %d", i);
+                        sprintf(label, "Color %d", i);
                         if (ImGui::Selectable(label, selected == i))
                             selected = i;
                     }
@@ -181,7 +182,8 @@ namespace VolumeRendering {
                             ImGui::EndTabItem();
                         }
                         if (ImGui::BeginTabItem("position")) {
-                            ImGui::SliderFloat("Pick point", &points[selected], selected==0?0:points[selected-1], 1);
+                            ImGui::SliderFloat("Pick point", &points[selected],
+                                               selected == 0 ? 0 : points[selected - 1], 1);
                             integrator->SetPoints(points);
                             ImGui::EndTabItem();
                         }

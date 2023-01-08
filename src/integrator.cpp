@@ -63,8 +63,8 @@ float Integrator::opacity_correction(float actual_step, float opacity) {
     return 1 - pow((1 - opacity), actual_step);
 }
 
-Vec3f Integrator::color_transfer(float val){
-    Vec3f r = Vec3f{1, 0.05, 0.05} * 0.8;
+Vec3f Integrator::color_transfer(float val)const {
+    /*Vec3f r = Vec3f{1, 0.05, 0.05} * 0.8;
     Vec3f g = Vec3f{0.05, 1, 0.05} * 0.8;
     Vec3f b = Vec3f{0.05, 0.05, 1} * 0.8;
     if (val < 0.01) {
@@ -81,7 +81,17 @@ Vec3f Integrator::color_transfer(float val){
     }
     else {
         return r;
+    }*/
+
+    for (int i = 0; i < colors.size(); ++i) {
+        if (i == 0 && val < points[i]) {
+            return colors[i];
+        } else if (points[i - 1] < val && val < points[i]) {
+            return (points[i] - val) / 0.02f * colors[i - 1] + (val - points[i - 1]) / 0.02f * colors[i];
+        }
     }
+    return colors[colors.size() - 1];
+
 }
 
 inline Vec2f sample(float dx, const Vec3sGrid &grid, const Vec3f &pos) {
@@ -242,12 +252,16 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     ray.origin = interleaved_sampling(actual_step * ray.direction, ray.origin) - EPS;
     Interaction interaction;
     bool path_has_obj= true;
-    if(! scene->intersect(ray,interaction)) path_has_obj= false;
+    if(! scene->intersect(ray,interaction))
+        path_has_obj= false;
 
     while (T > 0.05 && limit > 0) {
         auto next_pos = ray(actual_step);
         auto sample_pos = (ray.origin + next_pos) / 2;
         if(path_has_obj){
+            if(filter){
+                //TODO
+            }
             if(interaction.dist<actual_step + EPS){
                 result+=T* phoneLighting(interaction);
                 break;

@@ -11,8 +11,11 @@
 class VDBLoader {
 public:
 //    using TreeType = typename GridType::TreeType;
+    VDBLoader() = default;
 
-    explicit VDBLoader(const std::string& filename);
+    void load(const std::string &filename);
+
+    explicit VDBLoader(const std::string &filename);
 
     ~VDBLoader();
 
@@ -28,8 +31,9 @@ public:
     std::vector<std::string> gridNames;
     std::string filename;
 
-    static std::string getGridType(const openvdb::GridBase::Ptr& grid);
-    static float q_criterion(const Vec3sGrid& grid,const Coord& coord,const iBBox& ibbox);
+    static std::string getGridType(const openvdb::GridBase::Ptr &grid);
+
+    static float q_criterion(const Vec3sGrid &grid, const Coord &coord, const iBBox &ibbox);
 //    void SortBydx();
 private:
 };

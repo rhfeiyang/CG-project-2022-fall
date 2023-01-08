@@ -15,7 +15,7 @@ public:
 
     [[nodiscard]] float opacity_transfer(float value) const;
 
-    [[nodiscard]] static Vec3f color_transfer(float val) ;
+    [[nodiscard]]  Vec3f color_transfer(float val) const ;
 
     [[nodiscard]] Vec2f interpolation(Vec3f pos, uint32_t grid_idx_bm, int& finest_grid) const;
 
@@ -26,6 +26,12 @@ public:
     [[nodiscard]] float step_Base(Vec3f pos, uint32_t grid_idx_bm) const;
     [[nodiscard]] float step_Base(const int& finest_grid) const;
     Vec3f phoneLighting(Interaction& inter) const;
+    void SetColors(std::vector<Vec3f> &c){
+        colors=c;
+    }
+    void SetPoints(std::vector<float> &p){
+        points=p;
+    }
 
     void setiso_value(float value){
         iso_value=value;
@@ -42,6 +48,9 @@ private:
     float variance;
     float iso_value;
     float step_scale;
+
+    std::vector<Vec3f> colors;
+    std::vector<float> points;
 };
 
 #endif //INTEGRATOR_H_

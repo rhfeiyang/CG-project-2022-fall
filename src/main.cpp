@@ -5,6 +5,7 @@
 #include "integrator.h"
 #include "utils.h"
 #include "scene.h"
+#include <vector>
 
 //imGUI
 #include <imgui.h>
@@ -29,7 +30,9 @@ namespace VolumeRendering {
 
     //render parameters
     float iso_value = 0.03;
-    float s_color[3];
+    Vec3f s_color{0.06,0.06,0.06};
+    std::vector<Vec3f> colors;
+    std::vector<float> points;
 
     //
     bool show_demo_window = false;
@@ -80,10 +83,9 @@ namespace VolumeRendering {
         scene->setAmbient(Vec3f(0.1, 0.1, 0.1));
         //load vdb
         loader.load(GetFilePath(config.file_path));
-        std::cout << "Initialize Setting Finished" << std::endl;
-
         //init parameters
         iso_value = config.iso_value;
+        std::cout << "Initialize Setting Finished" << std::endl;
     }
 
     void DrawContents(std::shared_ptr<ImageRGB> &img) {
@@ -91,9 +93,21 @@ namespace VolumeRendering {
         glDrawPixels(res[0], res[1], GL_RGB, GL_UNSIGNED_BYTE, img->getdata());
     }
 
-    void RenderImg() {
+    void RenderInit(){
         integrator = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids, config.iso_value, config.var,
                                                   config.step_scale);
+        //inti color table
+        colors.push_back( {0.05, 0.05, 1});
+        colors.push_back({0.05, 1, 0.05});
+        colors.push_back({1, 0.05, 0.05});
+        points.push_back(0.01);
+        points.push_back(0.03);
+        points.push_back(0.06);
+        integrator->SetColors(colors);
+        integrator->SetPoints(points);
+
+    }
+    void RenderImg() {
         integrator->render();
         render = false;
     }
@@ -102,9 +116,9 @@ namespace VolumeRendering {
         DrawContents(camera->getImage());
     }
 
-    void WriteImg() {
-        rendered_img->writeImgToFile("../result.png");
-        std::cout << "\nImage saved to disk." << std::endl;
+    void WriteImg(const std::string &f) {
+        rendered_img->writeImgToFile(f);
+        std::cout << "Image saved to " << f << std::endl;
         write_img = false;
     }
 
@@ -119,10 +133,64 @@ namespace VolumeRendering {
             ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
 
             if (ImGui::TreeNode("Render settings")) {
-                ImGui::SliderFloat("iso-value", &iso_value, 0, 20);
+                ImGui::SliderFloat("iso-value", &iso_value, 0, 1);
                 integrator->setiso_value(iso_value);
-                ImGui::ColorEdit3("Sphere Color", s_color);
-                scene->setObjColor(Vec3f(s_color));
+                ImGui::ColorEdit3("Sphere Color", s_color.asPointer());
+                scene->setObjColor(s_color);
+                ImGui::Text("Colors");
+
+                //line with point
+                ImGui::PlotLines("Curve",points.data(),points.size(),0,NULL,0.0f,1.0f,ImVec2(0, 80.0f));
+
+
+
+                //add color
+                if (ImGui::Button("Add")) {
+                    colors.push_back(Vec3f{1, 1, 1});
+                    points.push_back(0);
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Remove") && !colors.empty()) {
+                    colors.pop_back();
+                    points.pop_back();
+                }
+                static int selected = 0;
+                {
+                    ImGui::BeginChild("left pane", ImVec2(150, 0), true);
+
+                    for (int i = 0; i < colors.size(); ++i) {
+                        char label[128];
+                        sprintf(label, "MyObject %d", i);
+                        if (ImGui::Selectable(label, selected == i))
+                            selected = i;
+                    }
+                    ImGui::EndChild();
+                }
+                ImGui::SameLine();
+                {
+                    ImGui::BeginGroup();
+                    ImGui::BeginChild("item view",
+                                      ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
+                    ImGui::Text("MyObject: %d", selected);
+                    ImGui::Separator();
+
+                    if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None)) {
+                        if (ImGui::BeginTabItem("Color")) {
+                            ImGui::ColorEdit3("Pick Color", colors[selected].asPointer());
+                            integrator->SetColors(colors);
+                            ImGui::EndTabItem();
+                        }
+                        if (ImGui::BeginTabItem("position")) {
+                            ImGui::SliderFloat("Pick point", &points[selected], selected==0?0:points[selected-1], 1);
+                            integrator->SetPoints(points);
+                            ImGui::EndTabItem();
+                        }
+                        ImGui::EndTabBar();
+                    }
+                    ImGui::EndChild();
+                    ImGui::EndGroup();
+
+                }
 
             }
 
@@ -133,7 +201,6 @@ namespace VolumeRendering {
             if (ImGui::Button("Start Rendering")) {
                 render = true;
             }
-
 
             if (render) {
                 std::cout << "Start Rendering..." << std::endl;
@@ -147,10 +214,15 @@ namespace VolumeRendering {
 
             }
 
+            static char save_path[128] = "../result.png";
+            ImGui::InputTextWithHint("", "save to:...", save_path, IM_ARRAYSIZE(save_path));
+
+            ImGui::SameLine();
             if (ImGui::Button("Write Image"))
                 write_img = true;
+
             if (write_img)
-                WriteImg();
+                WriteImg(save_path);
             ImGui::End();
         }
 
@@ -216,21 +288,20 @@ int main(int argc, char *argv[]) {
     ImGui_ImplGlfw_InitForOpenGL(window, true); // Setup Platform/Renderer bindings
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    
-    VolumeRendering::RenderImg();
-    VolumeRendering::WriteImg();
-//    while (!glfwWindowShouldClose(window)) {
-//        VolumeRendering::processInput(window);
-//        VolumeRendering::RenderOpenGL();
-//        VolumeRendering::RenderMainImGui();
-//        glfwSwapBuffers(window);
-//        glfwPollEvents();
-//    }
-//
-//    // Cleanup
-//    ImGui_ImplOpenGL3_Shutdown();
-//    ImGui_ImplGlfw_Shutdown();
-//    ImGui::DestroyContext();
+    VolumeRendering::RenderInit();
+    VolumeRendering::RenderMainImGui();
+    while (!glfwWindowShouldClose(window)) {
+        VolumeRendering::processInput(window);
+        VolumeRendering::RenderOpenGL();
+        VolumeRendering::RenderMainImGui();
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
 
 #define TEST

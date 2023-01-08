@@ -150,7 +150,7 @@ inline Vec3f gradient(float dx, const FloatGrid &grid, const Vec3f &pos) {
 }
 
 
-float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm) const {
+float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm, int& finest_grid) const {
 //    //TODO
     float result = 0;
     int cnt = 0;
@@ -163,8 +163,10 @@ float Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm) const {
 //            <FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor, grid->transform());
 //            float temp_val=sampler.wsSample(pos);
             float temp_val = sample((float)gridsData.dx[i], *grid, pos);
-            if(temp_val < 100)
+            if(temp_val < 100){
                 result = temp_val;
+                finest_grid=i;
+            }
 //            float value = sample((float) gridsData.dx[i], *grid, pos);
 //            if (value < 1) {
 //                result += value;
@@ -185,6 +187,10 @@ float Integrator::step_Base(Vec3f pos, uint32_t grid_idx_bm) const {
         }
     }
     return step;
+}
+
+float Integrator::step_Base(const int& finest_grid) const {
+    return float(gridsData.grids[finest_grid]->metaValue<double>("dx"));
 }
 
 Vec3f interleaved_sampling(Vec3f dt, Vec3f t0) {
@@ -241,6 +247,7 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     while (T > 0.05 && limit > 0) {
         auto next_pos = ray(actual_step);
         auto sample_pos = (ray.origin + next_pos) / 2;
+        contribute_grids_bm = kdtree.grid_contribute(sample_pos);
         if(path_has_obj){
             if(interaction.dist<actual_step/2){
                 result+=T* phoneLighting(interaction);
@@ -248,7 +255,8 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
             }
             interaction.dist-=actual_step;
         }
-        auto temp_val = interpolation(sample_pos, contribute_grids_bm);
+        int finest_grid_idx;
+        auto temp_val = interpolation(sample_pos, contribute_grids_bm,finest_grid_idx);
         auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val));
 
         result += T * opacity * color_transfer(temp_val);
@@ -257,14 +265,15 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
         ray.origin = next_pos;
         limit -= actual_step;
 
-        contribute_grids_bm = kdtree.grid_contribute(ray.origin);
-        step_base = step_Base(ray.origin, contribute_grids_bm);
+        step_base = step_Base(finest_grid_idx);
         actual_step = step_base * step_scale;
 //        cout<<result<<endl;
     }
 
     return result;
 }
+
+
 
 
 

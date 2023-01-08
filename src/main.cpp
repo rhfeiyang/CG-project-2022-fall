@@ -30,9 +30,9 @@ namespace VolumeRendering {
 
     //render parameters
     float iso_value = 0.03;
-    float s_color[3];
-    std::vector<Vec3f> colors(1);
-    std::vector<float> points(1);
+    Vec3f s_color{0.06,0.06,0.06};
+    std::vector<Vec3f> colors;
+    std::vector<float> points;
 
     //
     bool show_demo_window = false;
@@ -83,10 +83,9 @@ namespace VolumeRendering {
         scene->setAmbient(Vec3f(0.1, 0.1, 0.1));
         //load vdb
         loader.load(GetFilePath(config.file_path));
-        std::cout << "Initialize Setting Finished" << std::endl;
-
         //init parameters
         iso_value = config.iso_value;
+        std::cout << "Initialize Setting Finished" << std::endl;
     }
 
     void DrawContents(std::shared_ptr<ImageRGB> &img) {
@@ -94,9 +93,21 @@ namespace VolumeRendering {
         glDrawPixels(res[0], res[1], GL_RGB, GL_UNSIGNED_BYTE, img->getdata());
     }
 
-    void RenderImg() {
+    void RenderInit(){
         integrator = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids, config.iso_value, config.var,
                                                   config.step_scale);
+        //inti color table
+        colors.push_back( {0.05, 0.05, 1});
+        colors.push_back({0.05, 1, 0.05});
+        colors.push_back({1, 0.05, 0.05});
+        points.push_back(0.01);
+        points.push_back(0.03);
+        points.push_back(0.06);
+        integrator->SetColors(colors);
+        integrator->SetPoints(points);
+
+    }
+    void RenderImg() {
         integrator->render();
         render = false;
     }
@@ -105,9 +116,9 @@ namespace VolumeRendering {
         DrawContents(camera->getImage());
     }
 
-    void WriteImg() {
-        rendered_img->writeImgToFile("../result.png");
-        std::cout << "Image saved to disk." << std::endl;
+    void WriteImg(const std::string &f) {
+        rendered_img->writeImgToFile(f);
+        std::cout << "Image saved to " << f << std::endl;
         write_img = false;
     }
 
@@ -124,17 +135,24 @@ namespace VolumeRendering {
             if (ImGui::TreeNode("Render settings")) {
                 ImGui::SliderFloat("iso-value", &iso_value, 0, 1);
                 integrator->setiso_value(iso_value);
-                ImGui::ColorEdit3("Sphere Color", s_color);
-                scene->setObjColor(Vec3f(s_color));
+                ImGui::ColorEdit3("Sphere Color", s_color.asPointer());
+                scene->setObjColor(s_color);
                 ImGui::Text("Colors");
 
+                //line with point
+                ImGui::PlotLines("Curve",points.data(),points.size(),0,NULL,0.0f,1.0f,ImVec2(0, 80.0f));
+
+
+
                 //add color
-                if(ImGui::Button("Add")){
-                    colors.push_back(Vec3f{1,1,1});
+                if (ImGui::Button("Add")) {
+                    colors.push_back(Vec3f{1, 1, 1});
+                    points.push_back(0);
                 }
                 ImGui::SameLine();
-                if(ImGui::Button("Remove")){
+                if (ImGui::Button("Remove") && !colors.empty()) {
                     colors.pop_back();
+                    points.pop_back();
                 }
                 static int selected = 0;
                 {
@@ -151,27 +169,24 @@ namespace VolumeRendering {
                 ImGui::SameLine();
                 {
                     ImGui::BeginGroup();
-                    ImGui::BeginChild("item view", ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
+                    ImGui::BeginChild("item view",
+                                      ImVec2(0, -ImGui::GetFrameHeightWithSpacing())); // Leave room for 1 line below us
                     ImGui::Text("MyObject: %d", selected);
                     ImGui::Separator();
 
-                    if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
-                    {
-                        if (ImGui::BeginTabItem("Color"))
-                        {
-                            ImGui::ColorEdit3("Pick Color",colors[selected].asPointer());
+                    if (ImGui::BeginTabBar("##Tabs", ImGuiTabBarFlags_None)) {
+                        if (ImGui::BeginTabItem("Color")) {
+                            ImGui::ColorEdit3("Pick Color", colors[selected].asPointer());
+                            integrator->SetColors(colors);
                             ImGui::EndTabItem();
                         }
-                        if (ImGui::BeginTabItem("position"))
-                        {
-                            ImGui::SliderFloat("Pick point",&points[selected],0,1);
+                        if (ImGui::BeginTabItem("position")) {
+                            ImGui::SliderFloat("Pick point", &points[selected], selected==0?0:points[selected-1], 1);
+                            integrator->SetPoints(points);
                             ImGui::EndTabItem();
                         }
                         ImGui::EndTabBar();
                     }
-
-
-
                     ImGui::EndChild();
                     ImGui::EndGroup();
 
@@ -187,7 +202,6 @@ namespace VolumeRendering {
                 render = true;
             }
 
-
             if (render) {
                 std::cout << "Start Rendering..." << std::endl;
                 start = std::chrono::system_clock::now();
@@ -200,10 +214,15 @@ namespace VolumeRendering {
 
             }
 
+            static char save_path[128] = "../result.png";
+            ImGui::InputTextWithHint("", "save to:...", save_path, IM_ARRAYSIZE(save_path));
+
+            ImGui::SameLine();
             if (ImGui::Button("Write Image"))
                 write_img = true;
+
             if (write_img)
-                WriteImg();
+                WriteImg(save_path);
             ImGui::End();
         }
 
@@ -269,8 +288,8 @@ int main(int argc, char *argv[]) {
     ImGui_ImplGlfw_InitForOpenGL(window, true); // Setup Platform/Renderer bindings
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    VolumeRendering::RenderImg();
-    VolumeRendering::WriteImg();
+    VolumeRendering::RenderInit();
+    VolumeRendering::RenderMainImGui();
     while (!glfwWindowShouldClose(window)) {
         VolumeRendering::processInput(window);
         VolumeRendering::RenderOpenGL();

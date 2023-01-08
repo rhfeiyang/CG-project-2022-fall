@@ -34,8 +34,8 @@ void Integrator::render() const {
             Vec3f L(0, 0, 0);
 //            auto ray = camera->generateRay(0.5f+dx,0.5f+dy);
 //            L += front_to_back(ray, grid->metaValue<double>("dx"));
-            for(int s=0;s<spp;++s){
-                auto i=sampler.get2D();
+            for (int s = 0; s < spp; ++s) {
+                auto i = sampler.get2D();
                 auto ray = camera->generateRay(i.x() + dx, i.y() + dy);
                 L += front_to_back(ray);
             }
@@ -69,25 +69,29 @@ float Integrator::opacity_correction(float actual_step, float opacity) {
     return 1 - pow((1 - opacity), actual_step);
 }
 
-Vec3f Integrator::color_transfer(float val) {
-    Vec3f r = {1, 0.05, 0.05};
+Vec3f Integrator::color_transfer(float val) const{
+    /*Vec3f r = {1, 0.05, 0.05};
     Vec3f g = {0.05, 1, 0.05};
     Vec3f b = {0.05, 0.05, 1};
     if (val < 0.01) {
         return b;
-    }
-    else if (val < 0.03) {
+    } else if (val < 0.03) {
         return (0.03 - val) / 0.02 * b + (val - 0.01) / 0.02 * g;
-    }
-    else if (val < 0.04) {
+    } else if (val < 0.04) {
         return g;
-    }
-    else if (val < 0.06) {
+    } else if (val < 0.06) {
         return (0.06 - val) / 0.02 * g + (val - 0.04) / 0.02 * r;
-    }
-    else {
+    } else {
         return r;
+    }*/
+    for (int i = 0; i < colors.size(); ++i) {
+        if (i == 0 && val < points[i]) {
+            return colors[i];
+        } else if (points[i - 1] < val && val < points[i]) {
+            return (points[i] - val) / 0.02f * colors[i - 1] + (val - points[i - 1]) / 0.02f * colors[i];
+        }
     }
+    return colors[colors.size() - 1];
 }
 
 inline Vec2f sample(float dx, const Vec3sGrid &grid, const Vec3f &pos) {
@@ -119,12 +123,12 @@ inline Vec2f sample(float dx, const Vec3sGrid &grid, const Vec3f &pos) {
     return {sum_weightednorm / sum_weights, sum_weightedq / sum_weights};
 }
 
-inline bool gradient(float dx, const Vec3sGrid &grid, const Vec3f &pos, Vec3f & result) {
+inline bool gradient(float dx, const Vec3sGrid &grid, const Vec3f &pos, Vec3f &result) {
     const Vec3i inIdx = floorVec3(grid.worldToIndex(pos));
     const Vec3f cell_pos = grid.indexToWorld(inIdx);
     const auto &inTree = grid.tree();
     Vec3f temp_val;
-    Vec3f grad(0,0,0);
+    Vec3f grad(0, 0, 0);
     for (int axis = 0; axis < 3; axis++) {
         // For gradient on each direction (dx, dy, dz)
         float sum_weights = 0;
@@ -151,15 +155,14 @@ inline bool gradient(float dx, const Vec3sGrid &grid, const Vec3f &pos, Vec3f & 
         }
         grad[axis] = (sum_weights - sum_weightedValues) * sum_dH_dxyz / (sum_weights * sum_weights);
     }
-    if(grad.lengthSqr()>0){
-        result=grad.unit();
+    if (grad.lengthSqr() > 0) {
+        result = grad.unit();
         return true;
-    }
-    else return false;
+    } else return false;
 }
 
 
-Vec2f Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm, int& finest_grid) const {
+Vec2f Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm, int &finest_grid) const {
 //    //TODO
     Vec2f result = {0, 0};
     for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
@@ -169,10 +172,10 @@ Vec2f Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm, int& finest_gri
 //            openvdb::tools::GridSampler
 //            <FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor, grid->transform());
 //            float temp_val=sampler.wsSample(pos);
-            Vec2f temp_val = sample((float)gridsData.dx[i], *grid, pos);
-            if(temp_val[0] < 100) {
+            Vec2f temp_val = sample((float) gridsData.dx[i], *grid, pos);
+            if (temp_val[0] < 100) {
                 result = temp_val;
-                finest_grid=i;
+                finest_grid = i;
             }
 //            float value = sample((float) gridsData.dx[i], *grid, pos);
 //            if (value < 1) {
@@ -196,7 +199,7 @@ float Integrator::step_Base(Vec3f pos, uint32_t grid_idx_bm) const {
     return step;
 }
 
-float Integrator::step_Base(const int& finest_grid) const {
+float Integrator::step_Base(const int &finest_grid) const {
     return float(gridsData.grids[finest_grid]->metaValue<double>("dx"));
 }
 
@@ -208,26 +211,26 @@ Vec3f interleaved_sampling(Vec3f dt, Vec3f t0) {
 
 Vec3f Integrator::phoneLighting(Interaction &interaction) const {
     Vec3f radiance(0, 0, 0);
-    auto & light=scene->getLight();
+    auto &light = scene->getLight();
 
-    Vec3f diffuse={0.0f,0.0f,0.0f};
-    Vec3f specular={0.0f,0.0f,0.0f};
-    Vec3f ambient=scene->getAmbient()*interaction.color;
+    Vec3f diffuse = {0.0f, 0.0f, 0.0f};
+    Vec3f specular = {0.0f, 0.0f, 0.0f};
+    Vec3f ambient = scene->getAmbient() * interaction.color;
 
-    auto light_dir=(light->position-interaction.pos).unit();
-    Ray ray{interaction.pos,light_dir};
-    if(!scene->isShadowed(ray)) {
+    auto light_dir = (light->position - interaction.pos).unit();
+    Ray ray{interaction.pos, light_dir};
+    if (!scene->isShadowed(ray)) {
         //diffuse
-        diffuse+=Vec3f (std::max(light_dir.dot(interaction.normal),0.0f));
+        diffuse += Vec3f(std::max(light_dir.dot(interaction.normal), 0.0f));
         //specular
-        auto reflectdir=2*(light_dir.dot(interaction.normal))*interaction.normal-light_dir;
-        auto viewdir=(camera->getPosition()-interaction.pos).unit();
-        specular+=Vec3f(pow(std::max(double(viewdir.dot(reflectdir)), 0.0),16.0));
+        auto reflectdir = 2 * (light_dir.dot(interaction.normal)) * interaction.normal - light_dir;
+        auto viewdir = (camera->getPosition() - interaction.pos).unit();
+        specular += Vec3f(pow(std::max(double(viewdir.dot(reflectdir)), 0.0), 16.0));
     }
-    diffuse=diffuse*interaction.color;
-    specular=specular*interaction.color;
+    diffuse = diffuse * interaction.color;
+    specular = specular * interaction.color;
 //    cout<<diffuse<<" "<<specular<<" "<<ambient<<endl;
-    radiance=(diffuse+specular)*(light->emission(ray.origin,ray.direction))+ambient;
+    radiance = (diffuse + specular) * (light->emission(ray.origin, ray.direction)) + ambient;
     return radiance;
 }
 
@@ -247,31 +250,31 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     auto actual_step = step_base * step_scale;
     ray.origin = interleaved_sampling(actual_step * ray.direction, ray.origin) - EPS;
     Interaction interaction;
-    bool path_has_obj= true;
-    if(! scene->intersect(ray,interaction)) path_has_obj= false;
+    bool path_has_obj = true;
+    if (!scene->intersect(ray, interaction)) path_has_obj = false;
 
     while (T > 0.05 && limit > 0) {
         auto next_pos = ray(actual_step);
         auto sample_pos = (ray.origin + next_pos) / 2;
         contribute_grids_bm = kdtree.grid_contribute(sample_pos);
-        if(path_has_obj){
-            if(interaction.dist<actual_step + EPS){
-                result+=T* phoneLighting(interaction);
+        if (path_has_obj) {
+            if (interaction.dist < actual_step + EPS) {
+                result += T * phoneLighting(interaction);
                 break;
             }
-            interaction.dist-=actual_step;
+            interaction.dist -= actual_step;
         }
         int finest_grid_idx;
-        auto temp_val = interpolation(sample_pos, contribute_grids_bm,finest_grid_idx);
+        auto temp_val = interpolation(sample_pos, contribute_grids_bm, finest_grid_idx);
         // temp = {norm, q};
         auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val[1]));
 
-        if(opacity>0.001){
+        if (opacity > 0.001) {
             Vec3f grad;
-            auto color=color_transfer(temp_val[0]);
-            if(gradient(step_base,*gridsData.grids[finest_grid_idx],sample_pos,grad)){
-                Interaction inter{sample_pos,1,grad,color};
-                color+=phoneLighting(inter);
+            Vec3f color = color_transfer(temp_val[0]);
+            if (gradient(step_base, *gridsData.grids[finest_grid_idx], sample_pos, grad)) {
+                Interaction inter{sample_pos, 1, grad, color};
+                color += phoneLighting(inter);
             }
             result += T * opacity * color;
             T *= (1.0f - opacity);

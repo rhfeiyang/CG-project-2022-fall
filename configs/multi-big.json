@@ -1,6 +1,6 @@
 {
-  "spp": 2,
-  "image_resolution" : [1200, 1200],
+  "spp": 1,
+  "image_resolution" : [800, 800],
   "cam_config" : {
     "position" : [7,-6,3],
     "look_at": [7,2,3],
@@ -44,5 +44,5 @@
   "iso_value": 0.045,
 
   "var": 0.0007,
-  "step_scale":0.25
+  "step_scale":1
 }

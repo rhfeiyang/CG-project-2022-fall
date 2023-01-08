@@ -1,0 +1,118 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"jsonFile" : "directory-.-RelWithDebInfo-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.18"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				},
+				{
+					"build" : "libs",
+					"childIndexes" : 
+					[
+						2,
+						3,
+						4
+					],
+					"jsonFile" : "directory-libs-RelWithDebInfo-dd7a5ca29a7a50124f40.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.18"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "libs"
+				},
+				{
+					"build" : "libs/json",
+					"jsonFile" : "directory-libs.json-RelWithDebInfo-656d1b5edae1333e8e70.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.18"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 0,
+					"source" : "libs/json"
+				},
+				{
+					"build" : "libs/stb",
+					"jsonFile" : "directory-libs.stb-RelWithDebInfo-22d2db156c1ba2042e7b.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.18"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 0,
+					"source" : "libs/stb"
+				},
+				{
+					"build" : "libs/tinyobjloader",
+					"jsonFile" : "directory-libs.tinyobjloader-RelWithDebInfo-95c7a8d15339def2dcd5.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.18"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 0,
+					"source" : "libs/tinyobjloader"
+				}
+			],
+			"name" : "RelWithDebInfo",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					],
+					"name" : "CG_project_2022_fall",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "CG_project_2022_fall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-CG_project_2022_fall-RelWithDebInfo-69fcaa9ae38347f43174.json",
+					"name" : "CG_project_2022_fall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/ocean/Desktop/cg/project/CG-project-2022-fall/cmake-build-relwithdebinfo",
+		"source" : "C:/Users/ocean/Desktop/cg/project/CG-project-2022-fall"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}

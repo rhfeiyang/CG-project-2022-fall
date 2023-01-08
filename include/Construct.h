@@ -16,6 +16,9 @@ struct Pos{
     bool operator< (const Pos& other) const{
         return pos<other.pos;
     }
+    bool operator> (const Pos& other) const{
+        return !(*this < other);
+    }
 };
 
 class Kdtree;
@@ -29,6 +32,8 @@ public:
     [[nodiscard]] bool isLeaf() const { return leftChild== nullptr && rightChild== nullptr; }
 
     static std::vector<wBBox> splitWbbox(const wBBox& bbox, int axis, double pos);
+
+    static int bm_grid_count(uint32_t i);
 
     friend Kdtree;
 

@@ -119,6 +119,10 @@ namespace VolumeRendering {
 //        scene->setObjPosition(config.objects[0].position);
 //        scene->setObjScale(config.objects[0].scale);
 
+//ui init
+        spp=config.spp;
+        step=config.step_scale;
+
     }
 
     void RenderImg() {
@@ -187,7 +191,7 @@ namespace VolumeRendering {
                 ImGui::Text("Colors");
 
                 //line with point
-                ImGui::PlotLines("Curve", points.data(), points.size(), 0, NULL, 0.0f, 1.0f, ImVec2(0, 80.0f));
+                ImGui::PlotLines("Curve", points.data(), points.size(), 0, NULL, 0.0f, 0.1f, ImVec2(0, 80.0f));
 
                 //add color
                 if (ImGui::Button("Add")) {
@@ -225,9 +229,9 @@ namespace VolumeRendering {
                             integrator->SetColors(colors);
                             ImGui::EndTabItem();
                         }
-                        if (ImGui::BeginTabItem("position")) {
+                        if (ImGui::BeginTabItem("value")) {
                             ImGui::SliderFloat("Pick point", &points[selected],
-                                               selected == 0 ? 0 : points[selected - 1], 1);
+                                               selected == 0 ? 0 : points[selected - 1], 0.1);
                             integrator->SetPoints(points);
                             ImGui::EndTabItem();
                         }
@@ -254,9 +258,9 @@ namespace VolumeRendering {
                 }
 
             }*/
-            ImGui::SliderFloat("step",&step,0.01f,1.0f);
+            ImGui::SliderFloat("step scale",&step,0.01f,1.0f);
             integrator->Setstep_scale(step);
-            ImGui::SliderInt("spp",&spp,1,16);
+            ImGui::SliderInt("spp",&spp,1,25);
             integrator->Setspp(spp);
 
 

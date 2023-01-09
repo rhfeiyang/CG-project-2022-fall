@@ -1,5 +1,5 @@
 {
-  "spp": 2,
+  "spp": 1,
   "image_resolution" : [600, 600],
   "cam_config" : {
     "position" : [7,-6,3],

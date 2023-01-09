@@ -30,7 +30,7 @@ namespace VolumeRendering {
 
     //render parameters
     float iso_value = 0.015;
-    Vec3f s_color{0.06, 0.06, 0.06};
+    Vec3f s_color{0.06, 0.06, 0.6};
     std::vector<Vec3f> colors;
     std::vector<float> points;
     static constexpr const char* TransferStr = "linear\0gaussian\0";
@@ -111,9 +111,9 @@ namespace VolumeRendering {
         colors.push_back({0.05, 0.05, 1});
         colors.push_back({0.05, 1, 0.05});
         colors.push_back({1, 0.05, 0.05});
-        points.push_back(0.01);
-        points.push_back(0.04);
-        points.push_back(0.07);
+        points.push_back(0.012);
+        points.push_back(0.025);
+        points.push_back(0.072);
         integrator->SetColors(colors);
         integrator->SetPoints(points);
 //        scene->setObjPosition(config.objects[0].position);

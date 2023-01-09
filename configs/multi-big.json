@@ -1,15 +1,15 @@
 {
-  "spp": 1,
+  "spp": 2,
   "image_resolution" : [600, 600],
   "cam_config" : {
-    "position" : [7,-6,3],
+    "position" : [7,2,11],
     "look_at": [7,2,3],
-    "ref_up" : [0,0,1],
+    "ref_up" : [0,1,0],
     "vertical_fov": 45,
     "focal_length" : 1
   },
   "light_config" : {
-    "position": [5,-5,5],
+    "position": [5,4,8],
     "radiance" : [1,1,1]
   },
   "materials" : [
@@ -41,8 +41,8 @@
   ],
   "file_path": "../resource/multi-res big.vdb",
 
-  "iso_value": 0.045,
+  "iso_value": 0.05,
 
   "var": 0.0007,
-  "step_scale":0.25
+  "step_scale":0.1
 }

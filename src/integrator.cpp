@@ -49,14 +49,15 @@ void Integrator::render() const {
 float Integrator::opacity_transfer(float value) const {
     //first for isovalue of iso-surface, second for value to be the opacity
     //using Gauss pdf
-    return std::min(1.0, 1.6 * exp(-0.5 * (value - iso_value) * (value - iso_value) / (0.005 * 0.005)));
 //    if (0.009 < value && value < 0.03) {
 //        // 0.006 - 0.01: Gauss
 //        // 0.01 - 0.02: 1
 //        // 0.02 - 0.03: Gauss
 //        return std::min(1.0, 1.6 * exp(-0.5 * (value - 0.015) * (value - 0.015) / (0.005 * 0.005)));
 //    }
-//    return 0;
+    if (iso_value - 0.008 < value && value < iso_value + 0.008)
+        return std::min(1.0, 1.6 * exp(-0.5 * (value - iso_value) * (value - iso_value) / (0.004 * 0.004)));
+    return 0;
 }
 
 float Integrator::opacity_correction(float actual_step, float opacity) {
@@ -84,17 +85,21 @@ Vec3f Integrator::color_transfer(float val)const {
     }*/
 
     for (int i = 0; i < colors.size(); ++i) {
-        // TODO 1、对于color前后0.005，即共0.01的区间内，都为这个点的颜色 i.e. 0.4 -> 0.35~0.45
+        // 1、对于color前后0.005，即共0.01的区间内，都为这个点的颜色 i.e. 0.4 -> 0.35~0.45
         // 2、对于两个区间之间的部分，进行插值，注意分母 i.e. 0.04&0.08 -> 0.045~0.075区间需要插值 -> 分母是0.075-0.045=0.03
         // 3、对于小于最小点or大于最大点区间的部分，按照最小点or最大点
-        if (i == 0 && val < points[i]) {
+        if (i == 0 && val < points[i] + 0.0025) {
             return colors[i];
-        } else if (points[i - 1] < val && val < points[i]) {
-            return (points[i] - val) / 0.02f * colors[i - 1] + (val - points[i - 1]) / 0.02f * colors[i];
+        } else if (i == colors.size() - 1 && val > points[i] - 0.0025) {
+            return colors[i];
+        } else if (points[i] - 0.0025 < val && val < points[i] + 0.0025) {
+            return colors[i];
+        } else if (points[i - 1] + 0.0025 < val && val < points[i] - 0.0025) {
+            return (((points[i] - 0.0025) - val) * colors[i - 1] +
+                    (val - (points[i - 1] + 0.0025)) * colors[i]) / (points[i] - points[i - 1]);
         }
     }
-    return colors[colors.size() - 1];
-
+    return {0,0,0};
 }
 
 inline Vec2f sample(float dx, const Vec3sGrid &grid, const Vec3f &pos) {

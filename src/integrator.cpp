@@ -280,7 +280,7 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
         // temp = {norm, q};
         auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val[1]));
 
-        if(opacity>0.001){
+        if(opacity>0.005){
             Vec3f grad;
             auto color=color_transfer(temp_val[0]);
             if(gradient(step_base,*gridsData.grids[finest_grid_idx],sample_pos,grad)){

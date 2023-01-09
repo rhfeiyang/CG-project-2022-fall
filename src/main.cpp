@@ -180,7 +180,7 @@ namespace VolumeRendering {
 
                 end = std::chrono::system_clock::now();
                 auto time = std::chrono::duration<double>(end - start);
-                std::cout << "\nRender Finished in " << time << "s." << std::endl;
+                std::cout << "\nRender Finished in " << time << "." << std::endl;
 
             }
             if (ImGui::TreeNode("Render settings")) {

@@ -257,17 +257,23 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     bool path_has_obj= true;
     if(! scene->intersect(ray,interaction))
         path_has_obj= false;
-
+Vec3f  sphere_center=scene->GetPosition();
+float scale=scene->GetScale();
     while (T > 0.05 && limit > 0) {
         auto next_pos = ray(actual_step);
         auto sample_pos = (ray.origin + next_pos) / 2;
         if(path_has_obj){
             if(filter){
                 //TODO
-            }
-            if(interaction.dist<actual_step + EPS){
-                result+=T* phoneLighting(interaction);
-                break;
+                if((sample_pos-sphere_center).length()<scale+0.3){
+                    result+=T* phoneLighting(interaction);
+                    break;
+                }
+            }else{
+                if(interaction.dist<actual_step + EPS){
+                    result+=T* phoneLighting(interaction);
+                    break;
+                }
             }
             interaction.dist-=actual_step;
         }

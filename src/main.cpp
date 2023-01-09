@@ -33,6 +33,12 @@ namespace VolumeRendering {
     Vec3f s_color{0.06, 0.06, 0.06};
     std::vector<Vec3f> colors;
     std::vector<float> points;
+    static constexpr const char* TransferStr = "linear\0gaussian\0";
+    int transfer;
+    enum class TransferFunc{
+        linear,
+        gaussian,
+    };
 
     //
     bool show_demo_window = false;
@@ -106,6 +112,8 @@ namespace VolumeRendering {
         points.push_back(0.07);
         integrator->SetColors(colors);
         integrator->SetPoints(points);
+        scene->setObjPosition(config.objects[0].position);
+        scene->setObjScale(config.objects[0].scale);
 
     }
 
@@ -132,9 +140,26 @@ namespace VolumeRendering {
 
         {
             ImGui::Begin("Volume Rendering");
-            ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
+            //ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
             ImGui::Checkbox("Sphere Filter",&filter);
             integrator->SetFilter(filter);
+
+            ImGui::SameLine();
+            if (ImGui::Button("Start Rendering")) {
+                render = true;
+            }
+
+            if (render) {
+                std::cout << "Start Rendering..." << std::endl;
+                start = std::chrono::system_clock::now();
+                // render scene
+                RenderImg();
+
+                end = std::chrono::system_clock::now();
+                auto time = std::chrono::duration<double>(end - start);
+                std::cout << "\nRender Finished in " << time << "s." << std::endl;
+
+            }
             if (ImGui::TreeNode("Render settings")) {
                 ImGui::SliderFloat("iso-value", &iso_value, 0, 1);
                 integrator->setiso_value(iso_value);
@@ -196,25 +221,21 @@ namespace VolumeRendering {
 
             }
 
-
             if (show_demo_window)
                 ImGui::ShowDemoWindow(&show_demo_window);
 
-            if (ImGui::Button("Start Rendering")) {
-                render = true;
-            }
-
-            if (render) {
-                std::cout << "Start Rendering..." << std::endl;
-                start = std::chrono::system_clock::now();
-                // render scene
-                RenderImg();
-
-                end = std::chrono::system_clock::now();
-                auto time = std::chrono::duration<double>(end - start);
-                std::cout << "\nRender Finished in " << time << "s." << std::endl;
+            ImGui::Combo("Transfer Function",(int*)&transfer,TransferStr);
+            //TODO
+            switch (transfer) {
+                case (int)TransferFunc::linear:{
+                    break;
+                }
+                case (int)TransferFunc::gaussian:{
+                    break;
+                }
 
             }
+
 
             static char save_path[128] = "../result.png";
             ImGui::InputTextWithHint("", "save to:...", save_path, IM_ARRAYSIZE(save_path));

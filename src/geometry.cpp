@@ -31,7 +31,7 @@ bool TriangleMesh::intersect(Ray &ray, Interaction &interaction) const {
 //void TriangleMesh::setMaterial(std::shared_ptr<BSDF> &new_bsdf) {
 //  bsdf = new_bsdf;
 //}
-void TriangleMesh::setColor(Vec3f& mcolor){
+void TriangleMesh::setColor(const Vec3f& mcolor){
     color=mcolor;
 }
 

@@ -15,7 +15,7 @@ class TriangleMesh {
                std::vector<int> n_index);
   bool intersect(Ray &ray, Interaction &interaction) const;
 //  void setMaterial(std::shared_ptr<BSDF> &new_bsdf);
-    void setColor(Vec3f&);
+    void setColor(const Vec3f&);
   void buildBVH();
 //  BVHNode* build_BVH_recur(std::vector<Triangle>& meshes,int start, int end);
 //  int find_axis_ran(std::vector<Triangle>& meshes, int start, int end, float x_ran[2],float y_ran[2], float z_ran[2]);
@@ -258,8 +258,10 @@ class TriangleMesh {
 
         return new_offset;
     }
-
-
+    Vec3f GetPosition(){return position;}
+    float GetScale(){return scale;}
+    void SetPosition(const Vec3f& pos){position=pos;}
+    void SetScale(float f){scale=f;}
  private:
   bool intersectOneTriangle(Ray &ray, Interaction &interaction, const Vec3i& v_idx, const Vec3i& n_idx) const;
   void bvhHit(BVHNode *p, Interaction &interaction,
@@ -272,6 +274,8 @@ class TriangleMesh {
   std::vector<int> v_indices;
   std::vector<int> n_indices;
   std::vector<LinearBVHNode> linearBVH;
+  Vec3f position;
+  float scale;
 };
 
 #endif // GEOMETRY_H_

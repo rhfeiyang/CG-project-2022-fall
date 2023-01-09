@@ -29,7 +29,7 @@ namespace VolumeRendering {
     std::unique_ptr<Integrator> integrator;
 
     //render parameters
-    float iso_value = 0.03;
+    float iso_value = 0.015;
     Vec3f s_color{0.06, 0.06, 0.06};
     std::vector<Vec3f> colors;
     std::vector<float> points;

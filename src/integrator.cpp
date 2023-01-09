@@ -49,14 +49,14 @@ void Integrator::render() const {
 float Integrator::opacity_transfer(float value) const {
     //first for isovalue of iso-surface, second for value to be the opacity
     //using Gauss pdf
-
-    if (0.009 < value && value < 0.03) {
-        // 0.006 - 0.01: Gauss
-        // 0.01 - 0.02: 1
-        // 0.02 - 0.03: Gauss
-        return std::min(1.0, 1.6 * exp(-0.5 * (value - 0.015) * (value - 0.015) / (0.005 * 0.005)));
-    }
-    return 0;
+    return std::min(1.0, 1.6 * exp(-0.5 * (value - iso_value) * (value - iso_value) / (0.005 * 0.005)));
+//    if (0.009 < value && value < 0.03) {
+//        // 0.006 - 0.01: Gauss
+//        // 0.01 - 0.02: 1
+//        // 0.02 - 0.03: Gauss
+//        return std::min(1.0, 1.6 * exp(-0.5 * (value - 0.015) * (value - 0.015) / (0.005 * 0.005)));
+//    }
+//    return 0;
 }
 
 float Integrator::opacity_correction(float actual_step, float opacity) {
@@ -177,6 +177,7 @@ Vec2f Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm, int& finest_gri
 //            <FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor, grid->transform());
 //            float temp_val=sampler.wsSample(pos);
             Vec2f temp_val = sample((float)gridsData.dx[i], *grid, pos);
+//            cout<<temp_val<<endl;
             if(temp_val[0] < 100) {
                 result = temp_val;
                 finest_grid=i;
@@ -262,7 +263,7 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
         auto next_pos = ray(actual_step);
         auto sample_pos = (ray.origin + next_pos) / 2;
         if(path_has_obj){
-            if(interaction.dist<actual_step + EPS){
+            if(interaction.dist< EPS){
                 result+=T* phoneLighting(interaction);
                 break;
             }
@@ -276,11 +277,13 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
 
         if(opacity>0.005){
             Vec3f grad;
+//            cout<<temp_val[0]<<endl;
             auto color=color_transfer(temp_val[0]);
             if(gradient(step_base,*gridsData.grids[finest_grid_idx],sample_pos,grad)){
                 Interaction inter{sample_pos,1,grad,color};
                 color+=phoneLighting(inter);
             }
+//            cout<<step_base<<endl;
             result += T * opacity * color;
             T *= (1.0f - opacity);
         }
@@ -288,6 +291,8 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
         limit -= actual_step;
 
         step_base = step_Base(finest_grid_idx);
+
+
         actual_step = step_base * step_scale;
 //        cout<<result<<endl;
     }

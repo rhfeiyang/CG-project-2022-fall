@@ -14,17 +14,6 @@ std::vector<wBBox> KdTreeNode::splitWbbox(const wBBox &bbox, int axis, double po
     splitbbox.emplace_back(rp,bbox.max());
     return splitbbox;
 }
-int KdTreeNode::bm_grid_count(uint32_t i) {
-    i = (i & 0x55555555) + ((i>>1) & 0x55555555);
-
-    i = (i & 0x33333333) + ((i>>2) & 0x33333333);
-
-    i = (i & 0x0F0F0F0F) + ((i>>4) & 0x0F0F0F0F);
-
-    i = (i * 0x01010101) >> 24;
-    return i;
-}
-
 KdTreeNode::KdTreeNode(Grids_data& gridsData,uint32_t bm,wBBox bbox, int depth):bitmap(bm),rightChild(nullptr),leftChild(nullptr) {
     ///For construct: find the longest axis by bbox, find a pos to create two children
     ///For leaf: create a brick, store cells
@@ -133,7 +122,15 @@ uint32_t Kdtree::grid_contribute(const Vec3f &pos) const {
     return node->bitmap;
 }
 
-
-
+//int KdTreeNode::bm_grid_count(uint32_t i) {
+//    i = (i & 0x55555555) + ((i>>1) & 0x55555555);
+//
+//    i = (i & 0x33333333) + ((i>>2) & 0x33333333);
+//
+//    i = (i & 0x0F0F0F0F) + ((i>>4) & 0x0F0F0F0F);
+//
+//    i = (i * 0x01010101) >> 24;
+//    return i;
+//}
 
 

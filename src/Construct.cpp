@@ -14,30 +14,20 @@ std::vector<wBBox> KdTreeNode::splitWbbox(const wBBox &bbox, int axis, double po
     splitbbox.emplace_back(rp,bbox.max());
     return splitbbox;
 }
-int KdTreeNode::bm_grid_count(uint32_t i) {
-    i = (i & 0x55555555) + ((i>>1) & 0x55555555);
-
-    i = (i & 0x33333333) + ((i>>2) & 0x33333333);
-
-    i = (i & 0x0F0F0F0F) + ((i>>4) & 0x0F0F0F0F);
-
-    i = (i * 0x01010101) >> 24;
-    return i;
-}
 
 KdTreeNode::KdTreeNode(Grids_data& gridsData,uint32_t bm,wBBox bbox, int depth):bitmap(bm),rightChild(nullptr),leftChild(nullptr) {
     ///For construct: find the longest axis by bbox, find a pos to create two children
     ///For leaf: create a brick, store cells
     ///Can depth has some effect?
     if(depth>8) return;
-    if(bm>0){
-        for (int i = 0; bm; i++, bm >>= 1) {
-            if (bm & 1) {
-                if (bm == 1) return;
-                else break;
-            }
+    if(bm==0) return;
+    for (int i = 0; bm; i++, bm >>= 1) {
+        if (bm & 1) {
+            if (bm == 1) return;
+            else break;
         }
     }
+
     partition_axis=bbox.maxExtent();
 
     float pos_range[2]={static_cast<float>(bbox.min()[partition_axis]),static_cast<float>(bbox.max()[partition_axis])};
@@ -51,13 +41,13 @@ KdTreeNode::KdTreeNode(Grids_data& gridsData,uint32_t bm,wBBox bbox, int depth):
             auto pos1=gridsData.wbboxes[i].min()[partition_axis];
             auto pos2=gridsData.wbboxes[i].max()[partition_axis];
             if(pos1>pos_range[0]+EPS && pos1<pos_range[1]-EPS){
-                pos.push_back({pos1, (uint32_t) 1 << i, true});
-                min_pos.insert({pos1, (uint32_t) 1 << i, true});
+                pos.push_back({pos1, (uint32_t) 1 << i});
+                min_pos.insert({pos1, (uint32_t) 1 << i});
             }
             if(pos2>pos_range[0]+EPS && pos2<pos_range[1]-EPS){
 //                cout<<pos_range[0]<<" "<<pos_range[1]<<endl;
-                pos.push_back({pos2,(uint32_t)1 << i,false});
-                max_pos.insert({pos2,(uint32_t)1 << i,false});
+                pos.push_back({pos2,(uint32_t)1 << i});
+                max_pos.insert({pos2,(uint32_t)1 << i});
             }
         }
     }
@@ -73,32 +63,21 @@ KdTreeNode::KdTreeNode(Grids_data& gridsData,uint32_t bm,wBBox bbox, int depth):
         auto partition=pos[int((pos.size() - 1) / 2)];
         partition_pos=partition.pos;
         auto splitbbox= splitWbbox(bbox,partition_axis,partition_pos);
-//        auto contribute= contribute_grids;
-//        std::erase(contribute,partition.grid_idx);
-
-        if(partition.isMin){
-            temp_bm = bitmap;
-            for(auto min_po : min_pos){
-                if(min_po.pos >= partition_pos-EPS){
-                    temp_bm-=min_po.grid_idx_bm;
-                }
-                else break;
+        auto leftbm = bitmap; auto rightbm=bitmap;
+        for(auto min_po : min_pos){
+            if(min_po.pos >= partition_pos-EPS){
+                leftbm-=min_po.grid_idx_bm;
             }
-            leftChild=new KdTreeNode{gridsData,temp_bm,splitbbox[0],depth+1};
-            rightChild=new KdTreeNode{gridsData,bitmap,splitbbox[1],depth+1};
+            else break;
         }
-        else{
-            temp_bm=bitmap;
-            for(auto max_po:max_pos){
-                if(max_po.pos<= partition_pos+EPS){
-                    temp_bm-=max_po.grid_idx_bm;
-                }
-                else break;
+        for(auto max_po:max_pos){
+            if(max_po.pos<=partition_pos+EPS){
+                rightbm-=max_po.grid_idx_bm;
             }
-
-            leftChild=new KdTreeNode{gridsData,bitmap,splitbbox[0],depth+1};
-            rightChild=new KdTreeNode{gridsData,temp_bm,splitbbox[1],depth+1};
+            else break;
         }
+        leftChild=new KdTreeNode{gridsData,leftbm,splitbbox[0],depth+1};
+        rightChild=new KdTreeNode{gridsData,rightbm,splitbbox[1],depth+1};
     }
 }
 

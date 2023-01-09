@@ -12,7 +12,7 @@ struct Pos{
     double pos;
 //    int grid_idx;
     uint32_t grid_idx_bm;
-    bool isMin;
+//    bool isMin;
     bool operator< (const Pos& other) const{
         return pos<other.pos;
     }

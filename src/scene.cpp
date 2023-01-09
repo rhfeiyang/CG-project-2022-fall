@@ -62,6 +62,7 @@ void initSceneFromConfig(const Config &config, std::shared_ptr<Scene> &scene) {
   // then set corresponding material by name.
   std::cout << "loading obj files..." << std::endl;
   for (auto &object: config.objects) {
+      cout<<object.scale<<endl;
     auto mesh_obj = makeMeshObject(object.path, Vec3f(object.position),object.scale);
 //    mesh_obj->setMaterial(mat_list[object.material_name]);
     mesh_obj->setColor(mat_list[object.material_name]);

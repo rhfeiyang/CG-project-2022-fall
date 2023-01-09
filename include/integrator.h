@@ -42,13 +42,13 @@ public:
         iso_value = value;
     }
 
-    void SetFilter(bool f) {
-        filter = f;
-    }
-
+//    void SetFilter(bool f) {
+//        filter = f;
+//    }
+    std::shared_ptr<Scene> scene;
 private:
     std::shared_ptr<Camera> camera;
-    std::shared_ptr<Scene> scene;
+
 //    int max_depth;
     int spp;
 //    float dist_limit;
@@ -61,7 +61,7 @@ private:
     std::vector<Vec3f> colors;
     std::vector<float> points;
 
-    bool filter;
+//    bool filter;
 };
 
 #endif //INTEGRATOR_H_

@@ -44,6 +44,7 @@ namespace VolumeRendering {
     bool show_demo_window = false;
     bool render = false;
     bool write_img = false;
+    bool last_filter=false;
     bool filter=false;
 
     void LoadingConfig(int argc, char *argv[]) {
@@ -112,8 +113,8 @@ namespace VolumeRendering {
         points.push_back(0.07);
         integrator->SetColors(colors);
         integrator->SetPoints(points);
-        scene->setObjPosition(config.objects[0].position);
-        scene->setObjScale(config.objects[0].scale);
+//        scene->setObjPosition(config.objects[0].position);
+//        scene->setObjScale(config.objects[0].scale);
 
     }
 
@@ -142,7 +143,7 @@ namespace VolumeRendering {
             ImGui::Begin("Volume Rendering");
             //ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
             ImGui::Checkbox("Sphere Filter",&filter);
-            integrator->SetFilter(filter);
+//            integrator->SetFilter(filter);
 
             ImGui::SameLine();
             if (ImGui::Button("Start Rendering")) {
@@ -150,6 +151,21 @@ namespace VolumeRendering {
             }
 
             if (render) {
+                if(filter!=last_filter){
+                    scene = std::make_shared<Scene>();
+                    if(filter){
+                        auto config_temp=config;
+                        for(auto &obj:config_temp.objects){
+                            obj.scale+=0.14;
+                        }
+                        initSceneFromConfig(config_temp, scene);
+                    }
+                    else{
+                        initSceneFromConfig(config, scene);
+                    }
+                    integrator->scene=scene;
+                    last_filter=filter;
+                }
                 std::cout << "Start Rendering..." << std::endl;
                 start = std::chrono::system_clock::now();
                 // render scene

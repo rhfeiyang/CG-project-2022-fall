@@ -39,7 +39,7 @@
       "has_bvh" : true
     }
   ],
-  "file_path": "../resource/multi-res big.vdb",
+  "file_path": "../resource/multi-res small.vdb",
 
   "iso_value": 0.045,
 

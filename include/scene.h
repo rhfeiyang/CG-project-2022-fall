@@ -30,14 +30,12 @@ public:
     void setObjColor(const Vec3f &color){
         objects[0]->setColor(color);
     }
-    void setObjPosition(const Vec3f &pos){
-        objects[0]->SetPosition(pos);
-    }
-    void setObjScale(float s){
-        objects[0]->SetScale(s);
-    }
-    Vec3f GetPosition(){return objects[0]->GetPosition();}
-    float GetScale(){return objects[0]->GetScale();}
+//    void setObjPosition(const Vec3f &pos){
+//        objects[0]->SetPosition(pos);
+//    }
+//    void setObjScale(float s){
+//        objects[0]->SetScale(s);
+//    }
 
 private:
     std::vector<std::shared_ptr<TriangleMesh>> objects;

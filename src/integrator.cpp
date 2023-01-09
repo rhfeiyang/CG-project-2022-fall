@@ -64,37 +64,40 @@ float Integrator::opacity_correction(float actual_step, float opacity) {
 }
 
 Vec3f Integrator::color_transfer(float val)const {
-    /*Vec3f r = Vec3f{1, 0.05, 0.05} * 0.8;
-    Vec3f g = Vec3f{0.05, 1, 0.05} * 0.8;
-    Vec3f b = Vec3f{0.05, 0.05, 1} * 0.8;
-    if (val < 0.015) {
-        return b;
-    }
-    else if (val < 0.035) {
-        return (0.035 - val) / 0.02 * b + (val - 0.015) / 0.02 * g;
-    }
-    else if (val < 0.045) {
-        return g;
-    }
-    else if (val < 0.065) {
-        return (0.065 - val) / 0.02 * g + (val - 0.045) / 0.02 * r;
-    }
-    else {
-        return r;
-    }*/
+//    Vec3f r = Vec3f{1, 0.05, 0.05};
+//    Vec3f g = Vec3f{0.05, 1, 0.05};
+//    Vec3f b = Vec3f{0.05, 0.05, 1};
+//    if (val < 0.015) {
+//        return b;
+//    }
+//    else if (val < 0.035) {
+//        return (0.035 - val) / 0.02 * b + (val - 0.015) / 0.02 * g;
+//    }
+//    else if (val < 0.045) {
+//        return g;
+//    }
+//    else if (val < 0.065) {
+//        return (0.065 - val) / 0.02 * g + (val - 0.045) / 0.02 * r;
+//    }
+//    else {
+//        return r;
+//    }
 
     for (int i = 0; i < colors.size(); ++i) {
-        // TODO 1、对于color前后0.005，即共0.01的区间内，都为这个点的颜色 i.e. 0.4 -> 0.35~0.45
+        // 1、对于color前后0.005，即共0.01的区间内，都为这个点的颜色 i.e. 0.4 -> 0.35~0.45
         // 2、对于两个区间之间的部分，进行插值，注意分母 i.e. 0.04&0.08 -> 0.045~0.075区间需要插值 -> 分母是0.075-0.045=0.03
         // 3、对于小于最小点or大于最大点区间的部分，按照最小点or最大点
-        if (i == 0 && val < points[i]) {
+        if (i == 0 && val < points[i] + 0.005) {
             return colors[i];
-        } else if (points[i - 1] < val && val < points[i]) {
-            return (points[i] - val) / 0.02f * colors[i - 1] + (val - points[i - 1]) / 0.02f * colors[i];
+        } else if (i == colors.size() - 1 && val > points[i] - 0.005) {
+            return colors[i];
+        } else if (points [i] - 0.005 < val && val < points[i] + 0.005) {
+            return colors[i];
+        } else if (points[i - 1] + 0.005 < val && val < points[i] - 0.005) {
+            return (((points[i] - 0.005) - val) * colors[i - 1] +
+                    (val - (points[i - 1] + 0.005)) * colors[i]) / (points[i] - points[i - 1]);
         }
     }
-    return colors[colors.size() - 1];
-
 }
 
 inline Vec2f sample(float dx, const Vec3sGrid &grid, const Vec3f &pos) {

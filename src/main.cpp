@@ -39,6 +39,8 @@ namespace VolumeRendering {
         linear,
         gaussian,
     };
+    float step=0.25;
+    int spp=1;
 
     //
     bool show_demo_window = false;
@@ -46,6 +48,7 @@ namespace VolumeRendering {
     bool write_img = false;
     bool last_filter=false;
     bool filter=false;
+
 
     void LoadingConfig(int argc, char *argv[]) {
         /// load config from json file
@@ -128,7 +131,7 @@ namespace VolumeRendering {
     }
 
     void WriteImg(const std::string &f) {
-        rendered_img->writeImgToFile(f);
+        rendered_img->writeImgToFile("../"+f);
         std::cout << "Image saved to " << f << std::endl;
         write_img = false;
     }
@@ -240,7 +243,7 @@ namespace VolumeRendering {
             if (show_demo_window)
                 ImGui::ShowDemoWindow(&show_demo_window);
 
-            ImGui::Combo("Transfer Function",(int*)&transfer,TransferStr);
+            /*ImGui::Combo("Transfer Function",(int*)&transfer,TransferStr);
             //TODO
             switch (transfer) {
                 case (int)TransferFunc::linear:{
@@ -250,10 +253,14 @@ namespace VolumeRendering {
                     break;
                 }
 
-            }
+            }*/
+            ImGui::SliderFloat("step",&step,0.01f,1.0f);
+            integrator->Setstep_scale(step);
+            ImGui::SliderInt("spp",&spp,1,16);
+            integrator->Setspp(spp);
 
 
-            static char save_path[128] = "../result.png";
+            static char save_path[128] = "result.png";
             ImGui::InputTextWithHint("", "save to:...", save_path, IM_ARRAYSIZE(save_path));
 
             ImGui::SameLine();

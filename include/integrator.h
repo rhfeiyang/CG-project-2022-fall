@@ -42,6 +42,14 @@ public:
         iso_value = value;
     }
 
+    void Setstep_scale(float s) {
+        step_scale = s;
+    }
+
+    void Setspp(int s) {
+        spp = s;
+    }
+
 //    void SetFilter(bool f) {
 //        filter = f;
 //    }

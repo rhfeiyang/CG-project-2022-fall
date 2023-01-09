@@ -33,7 +33,7 @@ public:
 
     static std::vector<wBBox> splitWbbox(const wBBox& bbox, int axis, double pos);
 
-    static int bm_grid_count(uint32_t i);
+//    static int bm_grid_count(uint32_t i);
 
     friend Kdtree;
 

@@ -8,8 +8,39 @@
     "vertical_fov": 75,
     "focal_length" : 1
   },
+  "light_config" : {
+    "position": [5,-5,5],
+    "radiance" : [1,1,1]
+  },
+  "materials" : [
+    {
+      "color" : [0.725, 0.71, 0.68],
+      "name" : "grey_diffuse"
+    },
+    {
+      "color" : [0.14, 0.45, 0.091],
+      "name" : "green_diffuse"
+    },
+    {
+      "color" : [0.63, 0.065, 0.05],
+      "name" : "red_diffuse"
+    },
+    {
+      "color" : [0.06, 0.06, 0.6],
+      "name" : "blue_diffuse"
+    }
+  ],
+  "objects": [
+    {
+      "path": "../resource/sphere.obj",
+      "material_name" : "blue_diffuse",
+      "position": [5,2,3],
+      "scale": 1.33333333333333,
+      "has_bvh" : true
+    }
+  ],
   "file_path": "../resource/single-res big.vdb",
   "iso_value": 0.03,
   "var": 0.01,
-  "step_scale": 1
+  "step_scale": 0.25
 }

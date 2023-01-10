@@ -1,6 +1,6 @@
 {
-  "spp": 2,
-  "image_resolution" : [800, 800],
+  "spp": 8,
+  "image_resolution" : [1600, 1600],
   "cam_config" : {
     "position" : [7,2,11],
     "look_at": [7,2,3],
@@ -9,7 +9,7 @@
     "focal_length" : 1
   },
   "light_config" : {
-    "position": [1,5,4],
+    "position": [6,4,8],
     "radiance" : [1.5,1.5,1.5]
   },
   "materials" : [
@@ -44,5 +44,5 @@
   "iso_value": 0.05,
 
   "var": 0.0007,
-  "step_scale":0.1
+  "step_scale":0.5
 }

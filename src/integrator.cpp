@@ -321,9 +321,9 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     int last_sample_status = iso_status(temp_val[1]);
 
     while (T > 0.05 && limit > 0) {
-        auto next_pos = ray(actual_step);
-        auto sample_pos = (ray.origin + next_pos) / 2;
-
+//        auto next_pos = ray(actual_step);
+//        auto sample_pos = (ray.origin + next_pos) / 2;
+        auto sample_pos=ray(actual_step);
         contribute_grids_bm = kdtree.grid_contribute(sample_pos);
         int finest_grid_idx = gridsData.grids.size() - 1;
         auto temp_val = interpolation(sample_pos, contribute_grids_bm, finest_grid_idx);
@@ -340,16 +340,19 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
             /// temp = {norm, q};
 //            cout<<actual_step<<endl;
             auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val[1]));
-            const float self_emission_rate = 0.8;
+//            const float self_emission_rate = 0.8;
             if (opacity > 0.005) {
-                Vec3f grad;
+//                Vec3f grad;
 //            cout<<temp_val[0]<<endl;
                 auto color = opacity * color_transfer(temp_val[0]);
-                if (gradient(step_base, *gridsData.grids[finest_grid_idx], sample_pos, grad)) {
-                    Interaction inter{sample_pos, 1, grad, color};
-                    color = self_emission_rate * color + phongLighting(inter);
-                    result += T * color;
-                } else result += T * self_emission_rate * color;
+                ///Light
+//                if (gradient(step_base, *gridsData.grids[finest_grid_idx], sample_pos, grad)) {
+//                    Interaction inter{sample_pos, 1, grad, color};
+//                    color = self_emission_rate * color + phongLighting(inter);
+//                    result += T * color;
+//                } else
+//                    result += T * self_emission_rate * color;
+                result += T * color;
                 T *= (1.0f - opacity);
             }
         }

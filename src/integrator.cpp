@@ -296,6 +296,7 @@ bool Integrator::adaptive_sample(int &status, const Vec3f &pos1, const Vec3f &po
         printf("adaptive_sample w\n");
         return false;
     }
+    return false;
 }
 
 Vec3f Integrator::front_to_back(Ray &ray) const {
@@ -327,13 +328,7 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     while (T > 0.05 && limit > 0) {
         auto next_pos = ray(actual_step);
         auto sample_pos = (ray.origin + next_pos) / 2;
-        if(path_has_obj){
-            if(interaction.dist< EPS){
-                result+= T * phongLighting(interaction);
-                break;
-            }
-            interaction.dist-=actual_step;
-        }
+
         contribute_grids_bm = kdtree.grid_contribute(sample_pos);
         int finest_grid_idx = gridsData.grids.size()-1;
         auto temp_val = interpolation(sample_pos, contribute_grids_bm,finest_grid_idx);
@@ -345,13 +340,12 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
                 sample_status=0;
             }
         }
+        actual_step=(sample_pos-ray.origin).length();
         if(sample_status==0){
             /// temp = {norm, q};
-
-            actual_step=(sample_pos-ray.origin).length();
 //            cout<<actual_step<<endl;
             auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val[1]));
-            const float self_emission_rate=1;
+            const float self_emission_rate=0.8;
             if(opacity>0.005){
                 Vec3f grad;
 //            cout<<temp_val[0]<<endl;
@@ -364,6 +358,13 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
                 else result += T  * self_emission_rate* color;
                 T *= (1.0f - opacity);
             }
+        }
+        if(path_has_obj){
+            if(interaction.dist< EPS){
+                result+= T * phongLighting(interaction);
+                break;
+            }
+            interaction.dist-=actual_step;
         }
         last_sample_status=sample_status;
         ray.origin = sample_pos;

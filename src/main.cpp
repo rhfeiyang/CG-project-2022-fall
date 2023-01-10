@@ -91,7 +91,7 @@ namespace VolumeRendering {
         // construct scene.
         scene = std::make_shared<Scene>();
         initSceneFromConfig(config, scene);
-        scene->setAmbient(Vec3f(0.1, 0.1, 0.1));
+        scene->setAmbient(Vec3f(0.2, 0.2, 0.2));
         //load vdb
         loader.load(GetFilePath(config.file_path));
         //init parameters

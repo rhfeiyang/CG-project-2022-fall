@@ -29,7 +29,6 @@ set(HEADS
         include/Space_skipping.h
         include/ABR.h
         include/Transfer_func.h
-        include/Render.h
         include/VDBLoader.h
         include/camera.h
         include/integrator.h
@@ -48,7 +47,6 @@ set(SRC
         src/Space_skipping.cpp
         src/ABR.cpp
         src/Transfer_func.cpp
-        src/Render.cpp
         src/VDBLoader.cpp
         src/common.cpp
         src/common.cpp

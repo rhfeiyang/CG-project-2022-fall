@@ -135,7 +135,7 @@ namespace VolumeRendering {
     }
 
     void WriteImg(const std::string &f) {
-        rendered_img->writeImgToFile("../"+f);
+        rendered_img->writeImgToFile(f);
         std::cout << "Image saved to " << f << std::endl;
         write_img = false;
     }
@@ -264,7 +264,7 @@ namespace VolumeRendering {
             integrator->Setspp(spp);
 
 
-            static char save_path[128] = "result.png";
+            static char save_path[128] = "../result.png";
             ImGui::InputTextWithHint("", "save to:...", save_path, IM_ARRAYSIZE(save_path));
 
             ImGui::SameLine();

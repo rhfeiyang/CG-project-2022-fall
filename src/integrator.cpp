@@ -219,7 +219,7 @@ Vec3f interleaved_sampling(Vec3f dt, Vec3f t0) {
     return dt * (Vec3f(rho) + ceilVec3((t0 + rho * dt) / dt));
 }
 
-Vec3f Integrator::phoneLighting(Interaction &interaction) const {
+Vec3f Integrator::phongLighting(Interaction &interaction) const {
     Vec3f radiance(0, 0, 0);
     auto & light=scene->getLight();
 
@@ -244,6 +244,60 @@ Vec3f Integrator::phoneLighting(Interaction &interaction) const {
     return radiance;
 }
 
+int Integrator::iso_status(const float & value) const {
+    ///status: 0: just in  1: smaller 2: larger
+    int sample_status;
+    if(abs(value-iso_value)<=0.004)
+        sample_status=0;
+    else if(value<iso_value-0.004)
+        sample_status=1;
+    else if(value>iso_value+0.004)
+        sample_status=2;
+    else
+        return 1;
+    return sample_status;
+}
+
+///define: pos1: smaller pos2:larger
+bool Integrator::adaptive_test_recur( const Vec3f& pos1, const Vec3f& pos2,
+                         Vec3f& result_pos, Vec2f& result_value,int& finest_grid, int depth) const {
+    if(depth> log2(step_scale/0.005)) return false;
+    auto sample_pos=(pos1+pos2)/2;
+    auto contribute_grid=kdtree.grid_contribute(sample_pos);
+//    int finest_grid;
+    int f_g;
+    auto temp_val= interpolation(sample_pos,contribute_grid,f_g);
+    switch (iso_status(temp_val[1])) {
+        case 0:{
+            result_pos=sample_pos;
+            result_value=temp_val;
+            finest_grid=f_g;
+            return true;
+        }
+        case 1:{
+            return adaptive_test_recur(sample_pos,pos2,result_pos,result_value,finest_grid,depth+1);
+        }
+        case 2:{
+            return adaptive_test_recur(pos1,sample_pos,result_pos,result_value,finest_grid,depth+1);
+        }
+    }
+
+
+}
+
+bool Integrator::adaptive_test(int& status, const Vec3f& pos1, const Vec3f& pos2,
+                               uint32_t& grid_idx_bm,Vec3f& result_pos,int& finest_grid, Vec2f& result_value) const {
+    ///Only when last status=1, pos2 larger or last status=2, pos2 smaller, use it
+    if(status==1){
+        return adaptive_test_recur(pos1,pos2,result_pos,  result_value, finest_grid,0);
+    }
+    else if(status==2){
+        return adaptive_test_recur(pos2,pos1,result_pos,  result_value,finest_grid,0);
+    }
+    else
+        printf("adaptive_test w\n");
+}
+
 Vec3f Integrator::front_to_back(Ray &ray) const {
     ray.direction.normalize();
 //    cout<<ray.direction<<endl;
@@ -262,14 +316,24 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     Interaction interaction;
     bool path_has_obj= true;
     if(! scene->intersect(ray,interaction))
-        path_has_obj= false;
+    path_has_obj= false;
+
+
+
+    ///Adaptive sampling test
+    contribute_grids_bm = kdtree.grid_contribute(ray.origin);
+    int finest_grid_idx = gridsData.grids.size()-1;
+    auto temp_val=interpolation(ray.origin, contribute_grids_bm,finest_grid_idx);
+    int last_sample_status=iso_status(temp_val[1]);
+
+
 
     while (T > 0.05 && limit > 0) {
         auto next_pos = ray(actual_step);
         auto sample_pos = (ray.origin + next_pos) / 2;
         if(path_has_obj){
             if(interaction.dist< EPS){
-                result+=T* phoneLighting(interaction);
+                result+= T * phongLighting(interaction);
                 break;
             }
             interaction.dist-=actual_step;
@@ -277,26 +341,40 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
         contribute_grids_bm = kdtree.grid_contribute(sample_pos);
         int finest_grid_idx = gridsData.grids.size()-1;
         auto temp_val = interpolation(sample_pos, contribute_grids_bm,finest_grid_idx);
-        // temp = {norm, q};
-        auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val[1]));
+        int sample_status=iso_status(temp_val[1]);
 
-        if(opacity>0.005){
-            Vec3f grad;
-//            cout<<temp_val[0]<<endl;
-            auto color=color_transfer(temp_val[0]);
-            if(gradient(step_base,*gridsData.grids[finest_grid_idx],sample_pos,grad)){
-                Interaction inter{sample_pos,1,grad,color};
-                color+=phoneLighting(inter);
+        if(sample_status!=0 && last_sample_status!=0 &&sample_status!=last_sample_status){
+            if(adaptive_test(last_sample_status,ray.origin,sample_pos,contribute_grids_bm,sample_pos,finest_grid_idx,temp_val)){
+//                cout<<"y"<<endl;
+                sample_status=0;
             }
-//            cout<<step_base<<endl;
-            result += T * opacity * color;
-            T *= (1.0f - opacity);
+//            last_sample_status=sample_status;
         }
-        ray.origin = next_pos;
+        if(sample_status==0){
+            /// temp = {norm, q};
+
+            actual_step=(sample_pos-ray.origin).length();
+//            cout<<actual_step<<endl;
+            auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val[1]));
+
+            if(opacity>0.005){
+                Vec3f grad;
+//            cout<<temp_val[0]<<endl;
+                auto color=color_transfer(temp_val[0]);
+                if(gradient(step_base,*gridsData.grids[finest_grid_idx],sample_pos,grad)){
+                    Interaction inter{sample_pos,1,grad,color};
+                    color+= phongLighting(inter);
+                }
+//            cout<<step_base<<endl;
+                result += T * opacity * color;
+                T *= (1.0f - opacity);
+            }
+        }
+        last_sample_status=sample_status;
+        ray.origin = sample_pos;
         limit -= actual_step;
 
         step_base = step_Base(finest_grid_idx);
-
 
         actual_step = step_base * step_scale;
 //        cout<<result<<endl;

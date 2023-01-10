@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999994 (TeX Live 2022) (preloaded format=xelatex 2022.12.7)  10 JAN 2023 17:26
+This is XeTeX, Version 3.141592653-2.6-0.999994 (TeX Live 2022) (preloaded format=xelatex 2022.12.7)  10 JAN 2023 17:38
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1236,13 +1236,8 @@ Package fancyhdr Warning: \headheight is too small (13.0pt):
 [6.6]
 File: images/multi_big_shade.png Graphic file (type bmp)
 <images/multi_big_shade.png>
-File: images/single_big.png Graphic file (type bmp)
-<images/single_big.png>
-
-Overfull \hbox (1.19487pt too wide) in paragraph at lines 486--490
-\T1/LinuxLibertineT-TLF/m/n/9 Keller A, Hei-drich W. In-ter-leaved sam-pling[C]
-//Eurographics Work-
- []
+File: images/result_single_big.png Graphic file (type bmp)
+<images/result_single_big.png>
 
 
 Package fancyhdr Warning: \headheight is too small (13.0pt): 
@@ -1258,7 +1253,7 @@ Package rerunfilecheck Info: File `report.out' has not changed.
  ) 
 Here is how much of TeX's memory you used:
  22341 strings out of 476179
- 366502 string characters out of 5813072
+ 366558 string characters out of 5813072
  895226 words of memory out of 5000000
  42556 multiletter control sequences out of 15000+600000
  554738 words of font info for 88 fonts, out of 8000000 for 9000

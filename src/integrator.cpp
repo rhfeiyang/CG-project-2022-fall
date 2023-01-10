@@ -9,8 +9,8 @@
 
 Integrator::Integrator(std::shared_ptr<Camera> cam,
                        std::shared_ptr<Scene> scene, int spp, Grids_data &gridsData, float iso_value,
-                       float var, float step_scale)
-        : camera(std::move(cam)), scene(std::move(scene)), spp(spp), gridsData(gridsData), variance(var),
+                       float step_scale)
+        : camera(std::move(cam)), scene(std::move(scene)), spp(spp), gridsData(gridsData),
           iso_value(iso_value),
           kdtree(gridsData), step_scale(step_scale) {}
 

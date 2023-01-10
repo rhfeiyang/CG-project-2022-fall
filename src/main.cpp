@@ -105,8 +105,7 @@ namespace VolumeRendering {
     }
 
     void RenderInit() {
-        integrator = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids, config.iso_value, config.var,
-                                                  config.step_scale);
+        integrator = std::make_unique<Integrator>(camera, scene, config.spp, loader.grids, config.iso_value,config.step_scale);
         //inti color table
         colors.push_back({0.05, 0.05, 1});
         colors.push_back({0.05, 1, 0.05});

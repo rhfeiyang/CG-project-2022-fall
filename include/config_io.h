@@ -23,7 +23,6 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Config,
                                    objects,
                                    file_path,
                                    iso_value,
-                                   var,
                                    step_scale
 );
 

@@ -35,7 +35,7 @@ struct Config {
     LightConfig light_config;
     std::string file_path;
     float iso_value;
-    float var;
+//    float var;
     float step_scale;
     std::vector<MaterialConfig> materials;
     std::vector<ObjConfig> objects;

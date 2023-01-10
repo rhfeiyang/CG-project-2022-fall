@@ -9,7 +9,7 @@
 class Integrator {
 public:
     Integrator(std::shared_ptr<Camera> cam,
-               std::shared_ptr<Scene> scene, int spp, Grids_data &gridsData, float iso_value, float var = 0.001,
+               std::shared_ptr<Scene> scene, int spp, Grids_data &gridsData, float iso_value,
                float step_scale = 1);
 
     void render() const;
@@ -71,7 +71,7 @@ private:
 //    float dist_limit;
     Grids_data &gridsData;
     Kdtree kdtree;
-    float variance;
+//    float variance;
     float iso_value;
     float step_scale;
     int adaptive_depth;

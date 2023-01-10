@@ -110,13 +110,6 @@ void TriangleMesh::buildBVH() {
         Vec3i n_idx(n_indices[3 * i], n_indices[3 * i + 1], n_indices[3 * i + 2]);
         triangles[i] = Triangle_index(v_idx, n_idx);
     }
-    //clock_t start = clock();
-    //std::cout << "start buildBVH" << std::endl;
-    //MortonCodeSort(triangles);
-    //generateWithMortonCode(bvh, triangles, 0, triangles.size() - 1);
-    //std::cout << "end buildBVH" << std::endl;
-    //clock_t end = clock();
-    //std::cout << "time cost:" << (double)(end - start) / CLOCKS_PER_SEC << std::endl;
 
     for (auto& tri : triangles) {
 //        tri.aabb = AABB(vertices[tri.v_idx[0]], vertices[tri.v_idx[1]], vertices[tri.v_idx[2]]);
@@ -130,9 +123,9 @@ void TriangleMesh::buildBVH() {
     clock_t end = clock();
     std::cout << "time cost:" << (double)(end - start) / CLOCKS_PER_SEC << std::endl;
 
-    linearBVH.resize(triangles.size() * 2);
+    /*linearBVH.resize(triangles.size() * 2);
     int offset = 0;
     BVHCompress(bvh, &offset);
-    std::cout << "number of nodes:" << offset << std::endl;
+    std::cout << "number of nodes:" << offset << std::endl;*/
 
 }

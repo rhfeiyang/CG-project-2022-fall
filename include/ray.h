@@ -4,26 +4,24 @@
 #include "common.h"
 
 struct Ray {
-  /// origin point of ray
-  Vec3f origin;
-  /// normalized direction of the ray
-  Vec3f direction;
-  /// min and max distance of the ray
-  float t_min;
-  float t_max;
+    /// origin point of ray
+    Vec3f origin;
+    /// normalized direction of the ray
+    Vec3f direction;
+    /// min and max distance of the ray
+    float t_min;
+    float t_max;
 
-  explicit Ray(const Vec3f &o, const Vec3f &dir, float t_min = RAY_DEFAULT_MIN, float t_max = RAY_DEFAULT_MAX)
-  : origin(o)
-  , direction(dir)
-  , t_min(t_min)
-  , t_max(t_max) {}
+    explicit Ray(const Vec3f &o, const Vec3f &dir, float t_min = RAY_DEFAULT_MIN, float t_max = RAY_DEFAULT_MAX)
+            : origin(o), direction(dir), t_min(t_min), t_max(t_max) {}
 
-  [[nodiscard]] Vec3f operator()(float t) const {
-    return origin + t * direction;
-  }
+    [[nodiscard]] Vec3f operator()(float t) const {
+        return origin + t * direction;
+    }
 };
 
 // The intersection test for bounding box
 // Return true if hit, t_in t_out in result
-bool ray_bbox_range(Ray ray, wBBox& bbox,std::array<float,2>& result) ;
+bool ray_bbox_range(Ray ray, wBBox &bbox, std::array<float, 2> &result);
+
 #endif //RAY_H_

@@ -21,11 +21,6 @@ public:
 
     std::vector<std::string> &getGridNames();
 
-//    std::vector<openvdb::GridBase::Ptr> grids_base;
-//    std::vector<typename GridType::Ptr> grids;
-
-//    std::vector<FloatGrid::Ptr> grids;
-//    std::vector<double> dx;
     Grids_data grids;
     openvdb::io::File *file;
     std::vector<std::string> gridNames;
@@ -34,7 +29,7 @@ public:
     static std::string getGridType(const openvdb::GridBase::Ptr &grid);
 
     static float q_criterion(const Vec3sGrid &grid, const Coord &coord, const iBBox &ibbox);
-//    void SortBydx();
+
 private:
 };
 

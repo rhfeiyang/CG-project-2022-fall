@@ -33,21 +33,21 @@ namespace VolumeRendering {
     Vec3f s_color{0.06, 0.06, 0.6};
     std::vector<Vec3f> colors;
     std::vector<float> points;
-    static constexpr const char* TransferStr = "linear\0gaussian\0";
+    static constexpr const char *TransferStr = "linear\0gaussian\0";
     int transfer;
-    enum class TransferFunc{
+    enum class TransferFunc {
         linear,
         gaussian,
     };
-    float step=0.25;
-    int spp=1;
+    float step = 0.25;
+    int spp = 1;
 
     //
     bool show_demo_window = false;
     bool render = false;
     bool write_img = false;
-    bool last_filter=false;
-    bool filter=false;
+    bool last_filter = false;
+    bool filter = false;
 
 
     void LoadingConfig(int argc, char *argv[]) {
@@ -120,8 +120,8 @@ namespace VolumeRendering {
 //        scene->setObjScale(config.objects[0].scale);
 
 //ui init
-        spp=config.spp;
-        step=config.step_scale;
+        spp = config.spp;
+        step = config.step_scale;
 
     }
 
@@ -149,7 +149,7 @@ namespace VolumeRendering {
         {
             ImGui::Begin("Volume Rendering");
             //ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-            ImGui::Checkbox("Sphere Filter",&filter);
+            ImGui::Checkbox("Sphere Filter", &filter);
 //            integrator->SetFilter(filter);
 
             ImGui::SameLine();
@@ -158,21 +158,20 @@ namespace VolumeRendering {
             }
 
             if (render) {
-                if(filter!=last_filter){
+                if (filter != last_filter) {
                     scene = std::make_shared<Scene>();
-                    if(filter){
-                        auto config_temp=config;
-                        for(auto &obj:config_temp.objects){
-                            obj.scale+=0.14;
+                    if (filter) {
+                        auto config_temp = config;
+                        for (auto &obj: config_temp.objects) {
+                            obj.scale += 0.14;
                         }
                         scene->setAmbient(Vec3f(0.2, 0.2, 0.2));
                         initSceneFromConfig(config_temp, scene);
-                    }
-                    else{
+                    } else {
                         initSceneFromConfig(config, scene);
                     }
-                    integrator->scene=scene;
-                    last_filter=filter;
+                    integrator->scene = scene;
+                    last_filter = filter;
                 }
                 std::cout << "Start Rendering..." << std::endl;
                 start = std::chrono::system_clock::now();
@@ -259,9 +258,9 @@ namespace VolumeRendering {
                 }
 
             }*/
-            ImGui::SliderFloat("step scale",&step,0.01f,1.0f);
+            ImGui::SliderFloat("step scale", &step, 0.01f, 1.0f);
             integrator->Setstep_scale(step);
-            ImGui::SliderInt("spp",&spp,1,25);
+            ImGui::SliderInt("spp", &spp, 1, 25);
             integrator->Setspp(spp);
 
 

@@ -26,8 +26,10 @@ public:
     [[nodiscard]]const Vec3f &getAmbient() const;
 
     bool isShadowed(Ray &shadow_ray);
+
     bool intersect(Ray &ray, Interaction &interaction);
-    void setObjColor(const Vec3f &color){
+
+    void setObjColor(const Vec3f &color) {
         objects[0]->setColor(color);
     }
 //    void setObjPosition(const Vec3f &pos){

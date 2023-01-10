@@ -2,7 +2,8 @@
 // Created by Renhui on 2023/1/6.
 //
 #include "ray.h"
-bool ray_bbox_range(Ray ray, wBBox& bbox,std::array<float,2>& result) {
+
+bool ray_bbox_range(Ray ray, wBBox &bbox, std::array<float, 2> &result) {
     float dir_frac_x = (ray.direction[0] == 0.0) ? 1.0e32 : 1.0 / ray.direction[0];
     float dir_frac_y = (ray.direction[1] == 0.0) ? 1.0e32 : 1.0 / ray.direction[1];
     float dir_frac_z = (ray.direction[2] == 0.0) ? 1.0e32 : 1.0 / ray.direction[2];

@@ -44,7 +44,7 @@ inline float VDBLoader::q_criterion(const Vec3sGrid &grid, const Coord &coord, c
               acc_grid.getValue(coord - dz_coord)) / 2.0;
     }
     return (-0.5f * (gx.x() * gx.x() + gy.y() * gy.y() + gz.z() * gz.z())
-           - gx.y() * gy.x() - gx.z() * gz.x() - gy.z() * gz.y()) / (dx * dx);
+            - gx.y() * gy.x() - gx.z() * gz.x() - gy.z() * gz.y()) / (dx * dx);
 }
 
 //template<typename GridType>
@@ -137,19 +137,3 @@ VDBLoader::~VDBLoader() {
     }
 }
 
-//template<typename GridType>
-//void VDBLoader<GridType>::SortBydx() {
-//    std::sort(grids.begin(),grids.end(),[](auto &agrid,auto &bgrid){
-//        return agrid->metaValue<double>("dx")< bgrid->metaValue<double>("dx");
-//    });
-//}
-
-//            if (ite.isValueOn()) {
-//                auto value = ite.getValue().length();
-//                accessor.setValue(coord, value);
-//                accessor.setActiveState(coord, true);
-//            }
-//            else {
-//                accessor.setValue(coord, std::numeric_limits<float>::max());
-//                accessor.setActiveState(coord, false);
-//            }

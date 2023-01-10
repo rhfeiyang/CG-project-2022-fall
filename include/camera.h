@@ -6,8 +6,8 @@
 #include "ray.h"
 #include "image.h"
 #include "config.h"
-enum class Camera_Movement
-{
+
+enum class Camera_Movement {
     FORWARD,
     BACKWARD,
     LEFT,
@@ -15,25 +15,32 @@ enum class Camera_Movement
     UP,
     DOWN,
 };
+
 class Camera {
- public:
-  Camera();
-  explicit Camera(const Config::CamConfig &config, std::shared_ptr<ImageRGB>& img);
+public:
+    Camera();
 
-  Ray generateRay(float x, float y);
-  void lookAt(const Vec3f &look_at, const Vec3f &ref_up = {0, 1, 0});
+    explicit Camera(const Config::CamConfig &config, std::shared_ptr<ImageRGB> &img);
 
-  void setPosition(const Vec3f &pos);
-  [[nodiscard]] Vec3f getPosition() const;
-  void setFov(float new_fov);
-  [[nodiscard]] float getFov() const;
-  void setImage(std::shared_ptr<ImageRGB> &img);
-  [[nodiscard]] std::shared_ptr<ImageRGB> &getImage();
-    void ProcessKeyboard(Camera_Movement direction, float deltaTime)
-    {
-        float velocity = 1.0f* deltaTime;
-        switch (direction)
-        {
+    Ray generateRay(float x, float y);
+
+    void lookAt(const Vec3f &look_at, const Vec3f &ref_up = {0, 1, 0});
+
+    void setPosition(const Vec3f &pos);
+
+    [[nodiscard]] Vec3f getPosition() const;
+
+    void setFov(float new_fov);
+
+    [[nodiscard]] float getFov() const;
+
+    void setImage(std::shared_ptr<ImageRGB> &img);
+
+    [[nodiscard]] std::shared_ptr<ImageRGB> &getImage();
+
+    void ProcessKeyboard(Camera_Movement direction, float deltaTime) {
+        float velocity = 1.0f * deltaTime;
+        switch (direction) {
             case Camera_Movement::FORWARD:
                 position += forward * velocity;
                 break;
@@ -57,15 +64,16 @@ class Camera {
                 break;
         }
     }
- private:
-  Vec3f position;
-  Vec3f forward;
-  Vec3f up;
-  Vec3f right;
-  float focal_len;
-  float fov;
 
-  std::shared_ptr<ImageRGB> image;
+private:
+    Vec3f position;
+    Vec3f forward;
+    Vec3f up;
+    Vec3f right;
+    float focal_len;
+    float fov;
+
+    std::shared_ptr<ImageRGB> image;
 };
 
 #endif // CAMERA_H_

@@ -34,8 +34,8 @@ void Integrator::render() const {
             Vec3f L(0, 0, 0);
 //            auto ray = camera->generateRay(0.5f+dx,0.5f+dy);
 //            L += front_to_back(ray, grid->metaValue<double>("dx"));
-            for(int s=0;s<spp;++s){
-                auto i=sampler.get2D();
+            for (int s = 0; s < spp; ++s) {
+                auto i = sampler.get2D();
                 auto ray = camera->generateRay(i.x() + dx, i.y() + dy);
                 L += front_to_back(ray);
             }
@@ -64,7 +64,7 @@ float Integrator::opacity_correction(float actual_step, float opacity) {
     return 1 - pow((1 - opacity), actual_step);
 }
 
-Vec3f Integrator::color_transfer(float val)const {
+Vec3f Integrator::color_transfer(float val) const {
     /*Vec3f r = Vec3f{1, 0.05, 0.05} * 0.8;
     Vec3f g = Vec3f{0.05, 1, 0.05} * 0.8;
     Vec3f b = Vec3f{0.05, 0.05, 1} * 0.8;
@@ -99,7 +99,7 @@ Vec3f Integrator::color_transfer(float val)const {
                     (val - (points[i - 1] + 0.0025)) * colors[i]) / (points[i] - points[i - 1]);
         }
     }
-    return {0,0,0};
+    return {0, 0, 0};
 }
 
 inline Vec2f sample(float dx, const Vec3sGrid &grid, const Vec3f &pos) {
@@ -131,12 +131,12 @@ inline Vec2f sample(float dx, const Vec3sGrid &grid, const Vec3f &pos) {
     return {sum_weightednorm / sum_weights, sum_weightedq / sum_weights};
 }
 
-inline bool gradient(float dx, const Vec3sGrid &grid, const Vec3f &pos, Vec3f & result) {
+inline bool gradient(float dx, const Vec3sGrid &grid, const Vec3f &pos, Vec3f &result) {
     const Vec3i inIdx = floorVec3(grid.worldToIndex(pos));
     const Vec3f cell_pos = grid.indexToWorld(inIdx);
     const auto &inTree = grid.tree();
     Vec3f temp_val;
-    Vec3f grad(0,0,0);
+    Vec3f grad(0, 0, 0);
     for (int axis = 0; axis < 3; axis++) {
         // For gradient on each direction (dx, dy, dz)
         float sum_weights = 0;
@@ -163,15 +163,14 @@ inline bool gradient(float dx, const Vec3sGrid &grid, const Vec3f &pos, Vec3f & 
         }
         grad[axis] = (sum_weights - sum_weightedValues) * sum_dH_dxyz / (sum_weights * sum_weights);
     }
-    if(grad.lengthSqr()>0){
-        result=grad.unit();
+    if (grad.lengthSqr() > 0) {
+        result = grad.unit();
         return true;
-    }
-    else return false;
+    } else return false;
 }
 
 
-Vec2f Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm, int& finest_grid) const {
+Vec2f Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm, int &finest_grid) const {
 //    //TODO
     Vec2f result = {0, 0};
     for (int i = 0; grid_idx_bm; i++, grid_idx_bm >>= 1) {
@@ -181,11 +180,11 @@ Vec2f Integrator::interpolation(Vec3f pos, uint32_t grid_idx_bm, int& finest_gri
 //            openvdb::tools::GridSampler
 //            <FloatGrid::ConstAccessor, openvdb::tools::BoxSampler> sampler(accessor, grid->transform());
 //            float temp_val=sampler.wsSample(pos);
-            Vec2f temp_val = sample((float)gridsData.dx[i], *grid, pos);
+            Vec2f temp_val = sample((float) gridsData.dx[i], *grid, pos);
 //            cout<<temp_val<<endl;
-            if(temp_val[0] < 100) {
+            if (temp_val[0] < 100) {
                 result = temp_val;
-                finest_grid=i;
+                finest_grid = i;
             }
 //            float value = sample((float) gridsData.dx[i], *grid, pos);
 //            if (value < 1) {
@@ -209,7 +208,7 @@ float Integrator::step_Base(Vec3f pos, uint32_t grid_idx_bm) const {
     return step;
 }
 
-float Integrator::step_Base(const int& finest_grid) const {
+float Integrator::step_Base(const int &finest_grid) const {
     return float(gridsData.grids[finest_grid]->metaValue<double>("dx"));
 }
 
@@ -221,63 +220,63 @@ Vec3f interleaved_sampling(Vec3f dt, Vec3f t0) {
 
 Vec3f Integrator::phongLighting(Interaction &interaction) const {
     Vec3f radiance;
-    auto & light=scene->getLight();
+    auto &light = scene->getLight();
 
-    Vec3f diffuse={0.0f,0.0f,0.0f};
-    Vec3f specular={0.0f,0.0f,0.0f};
-    Vec3f ambient=scene->getAmbient()*interaction.color;
+    Vec3f diffuse = {0.0f, 0.0f, 0.0f};
+    Vec3f specular = {0.0f, 0.0f, 0.0f};
+    Vec3f ambient = scene->getAmbient() * interaction.color;
 
-    auto light_dir=(light->position-interaction.pos).unit();
-    Ray ray{interaction.pos,light_dir};
-    if(!scene->isShadowed(ray)) {
+    auto light_dir = (light->position - interaction.pos).unit();
+    Ray ray{interaction.pos, light_dir};
+    if (!scene->isShadowed(ray)) {
         //diffuse
-        diffuse+=Vec3f (std::max(light_dir.dot(interaction.normal),0.0f));
+        diffuse += Vec3f(std::max(light_dir.dot(interaction.normal), 0.0f));
         //specular
-        auto reflectdir=2*(light_dir.dot(interaction.normal))*interaction.normal-light_dir;
-        auto viewdir=(camera->getPosition()-interaction.pos).unit();
-        specular+=Vec3f(pow(std::max(double(viewdir.dot(reflectdir)), 0.0),16.0));
+        auto reflectdir = 2 * (light_dir.dot(interaction.normal)) * interaction.normal - light_dir;
+        auto viewdir = (camera->getPosition() - interaction.pos).unit();
+        specular += Vec3f(pow(std::max(double(viewdir.dot(reflectdir)), 0.0), 16.0));
     }
-    diffuse=diffuse*interaction.color;
-    specular=specular*interaction.color;
+    diffuse = diffuse * interaction.color;
+    specular = specular * interaction.color;
 //    cout<<diffuse<<" "<<specular<<" "<<ambient<<endl;
-    radiance=(diffuse+specular)*(light->emission(ray.origin,ray.direction))+ambient;
+    radiance = (diffuse + specular) * (light->emission(ray.origin, ray.direction)) + ambient;
     return radiance;
 }
 
-int Integrator::iso_status(const float & value) const {
+int Integrator::iso_status(const float &value) const {
     ///status: 0: just in  1: smaller 2: larger
     int sample_status;
-    if(abs(value-iso_value)<=0.004)
-        sample_status=0;
-    else if(value<iso_value-0.004)
-        sample_status=1;
-    else if(value>iso_value+0.004)
-        sample_status=2;
+    if (abs(value - iso_value) <= 0.004)
+        sample_status = 0;
+    else if (value < iso_value - 0.004)
+        sample_status = 1;
+    else if (value > iso_value + 0.004)
+        sample_status = 2;
     else
         return 1;
     return sample_status;
 }
 
 ///define: pos1: smaller pos2:larger
-bool Integrator::adaptive_recur(const Vec3f& pos1, const Vec3f& pos2,
-                                Vec3f& result_pos, Vec2f& result_value, int& finest_grid, int depth) const {
-    if(depth> log2(step_scale/0.005)) return false;
-    auto sample_pos=(pos1+pos2)/2;
-    auto contribute_grid=kdtree.grid_contribute(sample_pos);
+bool Integrator::adaptive_recur(const Vec3f &pos1, const Vec3f &pos2,
+                                Vec3f &result_pos, Vec2f &result_value, int &finest_grid, int depth) const {
+    if (depth > log2(step_scale / 0.005)) return false;
+    auto sample_pos = (pos1 + pos2) / 2;
+    auto contribute_grid = kdtree.grid_contribute(sample_pos);
 //    int finest_grid;
     int f_g;
-    auto temp_val= interpolation(sample_pos,contribute_grid,f_g);
+    auto temp_val = interpolation(sample_pos, contribute_grid, f_g);
     switch (iso_status(temp_val[1])) {
-        case 0:{
-            result_pos=sample_pos;
-            result_value=temp_val;
-            finest_grid=f_g;
+        case 0: {
+            result_pos = sample_pos;
+            result_value = temp_val;
+            finest_grid = f_g;
             return true;
         }
-        case 1:{
+        case 1: {
             return adaptive_recur(sample_pos, pos2, result_pos, result_value, finest_grid, depth + 1);
         }
-        case 2:{
+        case 2: {
             return adaptive_recur(pos1, sample_pos, result_pos, result_value, finest_grid, depth + 1);
         }
     }
@@ -286,13 +285,11 @@ bool Integrator::adaptive_recur(const Vec3f& pos1, const Vec3f& pos2,
 bool Integrator::adaptive_sample(int &status, const Vec3f &pos1, const Vec3f &pos2, Vec3f &result_pos, int &finest_grid,
                                  Vec2f &result_value) const {
     ///Only when last status=1, pos2 larger or last status=2, pos2 smaller, use it
-    if(status==1){
+    if (status == 1) {
         return adaptive_recur(pos1, pos2, result_pos, result_value, finest_grid, 0);
-    }
-    else if(status==2){
+    } else if (status == 2) {
         return adaptive_recur(pos2, pos1, result_pos, result_value, finest_grid, 0);
-    }
-    else{
+    } else {
         printf("adaptive_sample w\n");
         return false;
     }
@@ -315,58 +312,57 @@ Vec3f Integrator::front_to_back(Ray &ray) const {
     auto actual_step = step_base * step_scale;
     ray.origin = interleaved_sampling(actual_step * ray.direction, ray.origin) - EPS;
     Interaction interaction;
-    bool path_has_obj= true;
-    if(! scene->intersect(ray,interaction))
-        path_has_obj= false;
+    bool path_has_obj = true;
+    if (!scene->intersect(ray, interaction))
+        path_has_obj = false;
 
     ///Adaptive sampling
     contribute_grids_bm = kdtree.grid_contribute(ray.origin);
-    int finest_grid_idx = gridsData.grids.size()-1;
-    auto temp_val=interpolation(ray.origin, contribute_grids_bm,finest_grid_idx);
-    int last_sample_status=iso_status(temp_val[1]);
+    int finest_grid_idx = gridsData.grids.size() - 1;
+    auto temp_val = interpolation(ray.origin, contribute_grids_bm, finest_grid_idx);
+    int last_sample_status = iso_status(temp_val[1]);
 
     while (T > 0.05 && limit > 0) {
         auto next_pos = ray(actual_step);
         auto sample_pos = (ray.origin + next_pos) / 2;
 
         contribute_grids_bm = kdtree.grid_contribute(sample_pos);
-        int finest_grid_idx = gridsData.grids.size()-1;
-        auto temp_val = interpolation(sample_pos, contribute_grids_bm,finest_grid_idx);
-        int sample_status=iso_status(temp_val[1]);
+        int finest_grid_idx = gridsData.grids.size() - 1;
+        auto temp_val = interpolation(sample_pos, contribute_grids_bm, finest_grid_idx);
+        int sample_status = iso_status(temp_val[1]);
 
-        if(sample_status!=0 && last_sample_status!=0 &&sample_status!=last_sample_status){
-            if(adaptive_sample(last_sample_status, ray.origin, sample_pos, sample_pos,
-                               finest_grid_idx, temp_val)){
-                sample_status=0;
+        if (sample_status != 0 && last_sample_status != 0 && sample_status != last_sample_status) {
+            if (adaptive_sample(last_sample_status, ray.origin, sample_pos, sample_pos,
+                                finest_grid_idx, temp_val)) {
+                sample_status = 0;
             }
         }
-        actual_step=(sample_pos-ray.origin).length();
-        if(sample_status==0){
+        actual_step = (sample_pos - ray.origin).length();
+        if (sample_status == 0) {
             /// temp = {norm, q};
 //            cout<<actual_step<<endl;
             auto opacity = opacity_correction(actual_step, opacity_transfer(temp_val[1]));
-            const float self_emission_rate=0.8;
-            if(opacity>0.005){
+            const float self_emission_rate = 0.8;
+            if (opacity > 0.005) {
                 Vec3f grad;
 //            cout<<temp_val[0]<<endl;
-                auto color=opacity*color_transfer(temp_val[0]);
-                if(gradient(step_base,*gridsData.grids[finest_grid_idx],sample_pos,grad)){
-                    Interaction inter{sample_pos,1,grad,color};
-                    color=self_emission_rate*color+ phongLighting(inter);
-                    result+=T*color;
-                }
-                else result += T  * self_emission_rate* color;
+                auto color = opacity * color_transfer(temp_val[0]);
+                if (gradient(step_base, *gridsData.grids[finest_grid_idx], sample_pos, grad)) {
+                    Interaction inter{sample_pos, 1, grad, color};
+                    color = self_emission_rate * color + phongLighting(inter);
+                    result += T * color;
+                } else result += T * self_emission_rate * color;
                 T *= (1.0f - opacity);
             }
         }
-        if(path_has_obj){
-            if(interaction.dist< EPS){
-                result+= T * phongLighting(interaction);
+        if (path_has_obj) {
+            if (interaction.dist < EPS) {
+                result += T * phongLighting(interaction);
                 break;
             }
-            interaction.dist-=actual_step;
+            interaction.dist -= actual_step;
         }
-        last_sample_status=sample_status;
+        last_sample_status = sample_status;
         ray.origin = sample_pos;
         limit -= actual_step;
 

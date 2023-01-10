@@ -165,6 +165,7 @@ namespace VolumeRendering {
                         for(auto &obj:config_temp.objects){
                             obj.scale+=0.14;
                         }
+                        scene->setAmbient(Vec3f(0.2, 0.2, 0.2));
                         initSceneFromConfig(config_temp, scene);
                     }
                     else{

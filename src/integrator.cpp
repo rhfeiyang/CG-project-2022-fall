@@ -280,6 +280,7 @@ bool Integrator::adaptive_recur(const Vec3f &pos1, const Vec3f &pos2,
             return adaptive_recur(pos1, sample_pos, result_pos, result_value, finest_grid, depth + 1);
         }
     }
+    return false;
 }
 
 bool Integrator::adaptive_sample(int &status, const Vec3f &pos1, const Vec3f &pos2, Vec3f &result_pos, int &finest_grid,
@@ -293,7 +294,6 @@ bool Integrator::adaptive_sample(int &status, const Vec3f &pos1, const Vec3f &po
         printf("adaptive_sample w\n");
         return false;
     }
-    return false;
 }
 
 Vec3f Integrator::front_to_back(Ray &ray) const {

@@ -44,13 +44,14 @@ public:
 
     void Setstep_scale(float s) {
         step_scale = s;
+        adaptive_depth= std::ceil(log2(step_scale / 0.005));
     }
 
     void Setspp(int s) {
         spp = s;
     }
 
-    int iso_status(const float &value) const;
+    [[nodiscard]] int iso_status(const float &value) const;
 
     bool adaptive_recur(const Vec3f &pos1, const Vec3f &pos2,
                         Vec3f &result_pos, Vec2f &result_value, int &finest_grid, int depth) const;
@@ -73,7 +74,7 @@ private:
     float variance;
     float iso_value;
     float step_scale;
-
+    int adaptive_depth;
     std::vector<Vec3f> colors;
     std::vector<float> points;
 

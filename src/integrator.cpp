@@ -85,9 +85,7 @@ Vec3f Integrator::color_transfer(float val) const {
     }*/
 
     for (int i = 0; i < colors.size(); ++i) {
-        // 1、对于color前后0.005，即共0.01的区间内，都为这个点的颜色 i.e. 0.4 -> 0.35~0.45
-        // 2、对于两个区间之间的部分，进行插值，注意分母 i.e. 0.04&0.08 -> 0.045~0.075区间需要插值 -> 分母是0.075-0.045=0.03
-        // 3、对于小于最小点or大于最大点区间的部分，按照最小点or最大点
+
         if (i == 0 && val < points[i] + 0.0025) {
             return colors[i];
         } else if (i == colors.size() - 1 && val > points[i] - 0.0025) {
@@ -260,7 +258,7 @@ int Integrator::iso_status(const float &value) const {
 ///define: pos1: smaller pos2:larger
 bool Integrator::adaptive_recur(const Vec3f &pos1, const Vec3f &pos2,
                                 Vec3f &result_pos, Vec2f &result_value, int &finest_grid, int depth) const {
-    if (depth > log2(step_scale / 0.005)) return false;
+    if (depth > adaptive_depth) return false;
     auto sample_pos = (pos1 + pos2) / 2;
     auto contribute_grid = kdtree.grid_contribute(sample_pos);
 //    int finest_grid;

@@ -54,7 +54,7 @@ namespace VolumeRendering {
         /// load config from json file
         if (argc == 1) {
             std::cout << "No json specified, use default path." << std::endl;
-            file_path = GetFilePath("configs/single-small.json");
+            file_path = GetFilePath("configs/multi-big.json");
             fin.open(file_path);
         } else {
             file_path = argv[1];

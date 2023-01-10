@@ -28,7 +28,7 @@ public:
 
     [[nodiscard]] float step_Base(const int &finest_grid) const;
 
-    Vec3f phoneLighting(Interaction &inter) const;
+    Vec3f phongLighting(Interaction &interaction) const;
 
     void SetColors(std::vector<Vec3f> &c) {
         colors = c;
@@ -49,6 +49,12 @@ public:
     void Setspp(int s) {
         spp = s;
     }
+
+    int iso_status(const float & value) const;
+    bool adaptive_test_recur( const Vec3f& pos1, const Vec3f& pos2,
+                              Vec3f& result_pos, Vec2f& result_value,int& finest_grid, int depth) const;
+    bool adaptive_test(int& status, const Vec3f& pos1, const Vec3f& pos2,
+                                   uint32_t& grid_idx_bm,Vec3f& result_pos,int& finest_grid, Vec2f& result_value) const;
 
 //    void SetFilter(bool f) {
 //        filter = f;

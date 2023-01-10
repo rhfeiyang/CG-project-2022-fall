@@ -51,10 +51,10 @@ public:
     }
 
     int iso_status(const float & value) const;
-    bool adaptive_test_recur( const Vec3f& pos1, const Vec3f& pos2,
-                              Vec3f& result_pos, Vec2f& result_value,int& finest_grid, int depth) const;
-    bool adaptive_test(int& status, const Vec3f& pos1, const Vec3f& pos2,
-                                   uint32_t& grid_idx_bm,Vec3f& result_pos,int& finest_grid, Vec2f& result_value) const;
+    bool adaptive_recur(const Vec3f& pos1, const Vec3f& pos2,
+                        Vec3f& result_pos, Vec2f& result_value, int& finest_grid, int depth) const;
+    bool adaptive_sample(int &status, const Vec3f &pos1, const Vec3f &pos2, Vec3f &result_pos, int &finest_grid,
+                         Vec2f &result_value) const;
 
 //    void SetFilter(bool f) {
 //        filter = f;

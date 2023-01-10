@@ -9,8 +9,8 @@
     "focal_length" : 1
   },
   "light_config" : {
-    "position": [5,4,8],
-    "radiance" : [1,1,1]
+    "position": [1,5,4],
+    "radiance" : [1.5,1.5,1.5]
   },
   "materials" : [
     {

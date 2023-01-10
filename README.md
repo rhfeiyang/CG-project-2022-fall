@@ -1,6 +1,6 @@
 # Ray tracing based multi-resolution iso-surface rendering
 
-[//]: # (![CT ]&#40; report/images/....png &#41;)
+![result](result.png)
 
 Group Number:
 * Member 1: 任辉 2021533089
